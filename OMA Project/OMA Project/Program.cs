@@ -10,7 +10,7 @@ namespace OMA_Project
     {
         static void Main(string[] args)
         {
-            Problem x = new Problem(@"C:\Users\Fylax\Desktop\Material_assignment\input\Co_300_20_NT_0.txt");
+            Problem x = new Problem(@"D:\Download\Co_300_20\Co_300_20_NT_6.txt");
             int y = 0;
         }
     }
