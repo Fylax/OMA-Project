@@ -4,6 +4,29 @@ using System.IO;
 
 namespace OMA_Project
 {
+    public struct CostIdentifier
+    {
+        public int UserType
+        {
+            get;
+            private set;
+        }
+
+        public int TimeSlot
+        {
+            get;
+            private set;
+        }
+
+        public CostIdentifier(int userType, int timeSlot)
+        {
+            UserType = userType;
+            TimeSlot = timeSlot;
+        }
+
+        public int GetHasCode() => (unchecked(TimeSlot >> UserType));
+    }
+
     public class Problem
     {
         /// <summary>
@@ -12,7 +35,7 @@ namespace OMA_Project
         /// * chiave = coppia ordinata (Tipo Utente, Time Slot)
         /// * valore = matrice dei costi corrispondente
         /// </summary>
-        public Dictionary<Tuple<int, int>, float[][]> Matrix
+        public Dictionary<CostIdentifier, float[][]> Matrix
         {
             get;
             private set;
@@ -32,7 +55,7 @@ namespace OMA_Project
         /// * chiave = coppia ordinata (Tipo Utente, Time Slot)
         /// * valore = utenti disponibili per cella
         /// </summary>
-        public Dictionary<Tuple<int, int> , int[]> Availabilty
+        public Dictionary<CostIdentifier, int[]> Availabilty
         {
             get;
             private set;
@@ -76,11 +99,12 @@ namespace OMA_Project
 
         private void readMatrix(StreamReader file, int userTypes, int timings, int cells)
         {
-            Matrix = new Dictionary<Tuple<int, int>, float[][]>(userTypes * timings);
+            int iterations = unchecked(userTypes * timings);
+            Matrix = new Dictionary<CostIdentifier, float[][]>(iterations);
             string line;
             string[] parts;
             file.ReadLine();
-            for (int i = 0; i < userTypes * timings; ++i)
+            for (int i = 0; i < iterations; ++i)
             {
                 line = file.ReadLine();
                 parts = line.Split(' ');
@@ -95,17 +119,18 @@ namespace OMA_Project
                         System.Globalization.NumberStyles.AllowDecimalPoint,
                         System.Globalization.NumberFormatInfo.InvariantInfo));
                 }
-                Matrix.Add(Tuple.Create(currentUserType, currentTimeSlot), matrix);
+                Matrix.Add(new CostIdentifier(currentUserType, currentTimeSlot), matrix);
             }
         }
 
         private void readAvailabilities(StreamReader file, int userTypes, int timings, int cells)
         {
-            Availabilty = new Dictionary<Tuple<int, int>, int[]>(cells);
+            Availabilty = new Dictionary<CostIdentifier, int[]>(cells);
             string line;
             string[] parts;
+            int iterations = unchecked(userTypes * timings);
             file.ReadLine();
-            for (int i = 0; i < userTypes * timings; ++i)
+            for (int i = 0; i < iterations; ++i)
             {
                 line = file.ReadLine();
                 parts = line.Split(' ');
@@ -113,7 +138,7 @@ namespace OMA_Project
                 int currentTimeSlot = int.Parse(parts[1]);
                 line = file.ReadLine();
                 int[] available = Array.ConvertAll(line.Trim().Split(' '), int.Parse);
-                Availabilty.Add(Tuple.Create(currentUserType, currentTimeSlot), available);
+                Availabilty.Add(new CostIdentifier(currentUserType, currentTimeSlot), available);
             }
         }
     }
