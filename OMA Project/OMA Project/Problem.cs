@@ -30,12 +30,12 @@ namespace OMA_Project
     public class Problem
     {
         /// <summary>
-        /// x_{ij}^{tm}
+        /// c_{ij}^{tm}
         /// Dizionario (lista chiave-Valore):
         /// * chiave = coppia ordinata (Tipo Utente, Time Slot)
         /// * valore = matrice dei costi corrispondente
         /// </summary>
-        public Dictionary<CostIdentifier, float[][]> Matrix
+        public Dictionary<CostIdentifier, int[][]> Matrix
         {
             get;
             private set;
@@ -70,7 +70,7 @@ namespace OMA_Project
 
                     string line;
                     string[] parts;
-                    
+
                     // Reads first row (# cell, # time slots, # user types)
                     line = file.ReadLine();
                     parts = line.Split(' ');
@@ -100,7 +100,7 @@ namespace OMA_Project
         private void readMatrix(StreamReader file, int userTypes, int timings, int cells)
         {
             int iterations = unchecked(userTypes * timings);
-            Matrix = new Dictionary<CostIdentifier, float[][]>(iterations);
+            Matrix = new Dictionary<CostIdentifier, int[][]>(iterations);
             string line;
             string[] parts;
             file.ReadLine();
@@ -110,14 +110,15 @@ namespace OMA_Project
                 parts = line.Split(' ');
                 int currentUserType = int.Parse(parts[0]);
                 int currentTimeSlot = int.Parse(parts[1]);
-                float[][] matrix = new float[cells][];
+                int[][] matrix = new int[cells][];
                 for (int j = 0; j < cells; ++j)
                 {
                     // legge linea matrice considerando il punto (.) come separatore decimale
                     line = file.ReadLine();
-                    matrix[j] = Array.ConvertAll(line.Trim().Split(' '), cost => float.Parse(cost,
+                    matrix[j] = Array.ConvertAll(line.Trim().Split(' '), cost => (int)Math.Round(float.Parse(cost,
                         System.Globalization.NumberStyles.AllowDecimalPoint,
-                        System.Globalization.NumberFormatInfo.InvariantInfo));
+                        System.Globalization.NumberFormatInfo.InvariantInfo),
+                        0, MidpointRounding.AwayFromZero));
                 }
                 Matrix.Add(new CostIdentifier(currentUserType, currentTimeSlot), matrix);
             }
