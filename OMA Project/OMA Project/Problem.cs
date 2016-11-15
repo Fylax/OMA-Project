@@ -114,11 +114,11 @@ namespace OMA_Project
                 for (int j = 0; j < cells; ++j)
                 {
                     // legge linea matrice considerando il punto (.) come separatore decimale
+                    // direttamente troncato (non arrotondato)
                     line = file.ReadLine();
-                    matrix[j] = Array.ConvertAll(line.Trim().Split(' '), cost => (int)Math.Round(float.Parse(cost,
+                    matrix[j] = Array.ConvertAll(line.Trim().Split(' '), cost => (int)float.Parse(cost,
                         System.Globalization.NumberStyles.AllowDecimalPoint,
-                        System.Globalization.NumberFormatInfo.InvariantInfo),
-                        0, MidpointRounding.AwayFromZero));
+                        System.Globalization.NumberFormatInfo.InvariantInfo));
                 }
                 Matrix.Add(new CostIdentifier(currentUserType, currentTimeSlot), matrix);
             }
