@@ -4,27 +4,6 @@ using System.IO;
 
 namespace OMA_Project
 {
-    public struct CostIdentifier
-    {
-        public int UserType
-        {
-            get;
-        }
-
-        public int TimeSlot
-        {
-            get;
-        }
-
-        public CostIdentifier(int userType, int timeSlot)
-        {
-            UserType = userType;
-            TimeSlot = timeSlot;
-        }
-
-        public int GetHasCode() => (unchecked(TimeSlot >> UserType));
-    }
-
     public class Problem
     {
         /// <summary>
@@ -33,7 +12,7 @@ namespace OMA_Project
         /// * chiave = coppia ordinata (Tipo Utente, Time Slot)
         /// * valore = matrice dei costi corrispondente
         /// </summary>
-        public Dictionary<CostIdentifier, int[][]> Matrix
+        public Costs Matrix
         {
             get;
             private set;
@@ -106,7 +85,7 @@ namespace OMA_Project
         private void readMatrix(StreamReader file, int userTypes, int timings, int cells)
         {
             int iterations = unchecked(userTypes * timings);
-            Matrix = new Dictionary<CostIdentifier, int[][]>(iterations);
+            Matrix = new Costs(timings, userTypes);
             string line;
             string[] parts;
             file.ReadLine();
@@ -126,7 +105,7 @@ namespace OMA_Project
                         System.Globalization.NumberStyles.AllowDecimalPoint,
                         System.Globalization.NumberFormatInfo.InvariantInfo));
                 }
-                Matrix.Add(new CostIdentifier(currentUserType, currentTimeSlot), matrix);
+                Matrix.AddMatrix(currentTimeSlot, currentUserType, matrix);
             }
         }
 
@@ -167,14 +146,14 @@ namespace OMA_Project
                         if (i+j < upperBound && av.GetUserNumber(i + j, 0, u) > res)
                         {
                             tasks[i] -= (res * TaskPerUser[u]);
-                            av.Use(i + j, 0, u, res);
-                            objFunct += (res * Matrix[new CostIdentifier(u, 0)][i + j][i]);
+                            av.DecreaseUser(i + j, 0, u, res);
+                            objFunct += (res * Matrix.GetCost(0, u, i+j, i));
                         }
                         if (i-j >= lowerBound && av.GetUserNumber(i - j, 0, u) > res)
                         {
                             tasks[i] -= (res * TaskPerUser[u]);
-                            av.Use(i - j, 0, u, res);
-                            objFunct += (res * Matrix[new CostIdentifier(u, 0)][i - j][i]);
+                            av.DecreaseUser(i - j, 0, u, res);
+                            objFunct += (res * Matrix.GetCost(0, u, i - j, i));
                         }
                     }
                     ++j;

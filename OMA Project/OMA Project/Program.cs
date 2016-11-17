@@ -11,7 +11,8 @@ namespace OMA_Project
     {
         static void Main(string[] args)
         {
-            Problem x = new Problem(@"C:\Users\Fylax\Desktop\Material_assignment\input\Co_30_1_NT_0.txt");
+            Problem x = new Problem(@"C:\Users\Fylax\Desktop\Material_assignment\input\Co_30_20_NT_0.txt");
+            x.Matrix.GetMin(13, x.TaskPerUser);
             var z = Stopwatch.StartNew();
             x.GreedySolution();
             var q = z.ElapsedMilliseconds;

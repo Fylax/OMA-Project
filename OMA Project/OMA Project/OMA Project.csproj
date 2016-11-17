@@ -43,6 +43,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Availabilities.cs" />
+    <Compile Include="Costs.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Problem.cs" />
     <Compile Include="Program.cs" />
