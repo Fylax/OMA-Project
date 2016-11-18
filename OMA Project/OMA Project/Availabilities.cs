@@ -1,4 +1,5 @@
-﻿namespace OMA_Project
+﻿using OMA_Project.Extensions;
+namespace OMA_Project
 {
     public class Availabilities
     {
@@ -7,9 +8,10 @@
         /// </summary>
         private readonly int[][][] values;
 
+        
         private Availabilities(Availabilities av)
         {
-            values = (int[][][])av.values.Clone();
+            values = av.values.DeepClone();
         }
 
         /// <summary>
@@ -29,18 +31,6 @@
                     values[i][j] = new int[userTypes];
                 }
             }
-        }
-
-        /// <summary>
-        /// Aggiunge un costo.
-        /// </summary>
-        /// <param name="cell">Cella di interesse</param>
-        /// <param name="timeSlot">Time slot di interesse</param>
-        /// <param name="userType">Tipo di utente coinvolto</param>
-        /// <param name="userNumber">Costo di spostamento</param>
-        public void Add(int cell, int timeSlot, int userType, int userNumber)
-        {
-            values[cell][timeSlot][userType] = userNumber;
         }
 
         /// <summary>
@@ -66,7 +56,16 @@
                 values[i][timeSlot][userType] = userNumber[i];
             }
         }
-        
+
+        /// <summary>
+        /// Indica se sono presenti utenti
+        /// </summary>
+        /// <param name="cell">Cella di interesse</param>
+        /// <param name="timeSlot">Time slot di interesse</param>
+        /// <param name="userType">Tipo di utente di interesse</param>
+        /// <returns />
+        public bool HasUsers(int cell, int timeSlot, int userType) => values[cell][timeSlot][userType] != 0;
+
         /// <summary>
         /// Utilizza utenti attualmente in una cella
         /// </summary>
@@ -76,7 +75,7 @@
         /// <param name="used">Numero di utenti utilizzati</param>
         public void DecreaseUser(int cell, int timeSlot, int userType, int used)
         {
-           values[cell][timeSlot][userType] -= used;
+            values[cell][timeSlot][userType] -= used;
         }
 
         /// <summary>

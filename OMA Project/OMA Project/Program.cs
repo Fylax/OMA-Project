@@ -7,19 +7,12 @@ using System.Diagnostics;
 
 namespace OMA_Project
 {
-    class Program
+    internal static class Program
     {
-        static void Main(string[] args)
+        public static void Main()
         {
-            Problem x = new Problem(@"C:\Users\Fylax\Desktop\Material_assignment\input\Co_30_1_NT_0.txt");
-            var z = Stopwatch.StartNew();
-            var h = x.Matrix.GetMin(1, x.TaskPerUser);
-            var q = z.ElapsedMilliseconds;
-            x.GreedySolution();
-
-            //Problem x = new Problem(@"C: \Users\vergo\Google Drive\PoliTO - Magistrale\• 1.1 Optimization Methods and Algorithms\Assignement\Materiale\material_assignment_v2\Material_assignment\input\Co_300_20\Co_300_20_T_19.txt");            
-            Console.WriteLine(q);
-            Console.Read();
+            Problem x = new Problem(@"C:\Users\Fylax\Desktop\Material_assignment\input\Co_300_20_NT_0.txt");
+            int[] h = x.Matrix.GetMin(1, x.TaskPerUser, x.Availabilty);
         }
     }
 }

@@ -1,47 +1,81 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-namespace OMA_Project
+﻿namespace OMA_Project
 {
     public class Costs
     {
-        private readonly Dictionary<CostIndex, int[][]> matrix;
+        private readonly int[][][][] costMatrix;
 
-        public Costs(int timeSlots, int userTypes)
+        public int Cells => costMatrix.Length;
+
+        public Costs(int numCells, int timeSlots, int userTypes)
         {
-            matrix = new Dictionary<CostIndex, int[][]>(timeSlots * userTypes);
+            costMatrix = new int[numCells][][][];
+            for (int i = 0; i < numCells; ++i)
+            {
+                costMatrix[i] = new int[numCells][][];
+                for (int j = 0; j < numCells; ++j)
+                {
+                    costMatrix[i][j] = new int[timeSlots][];
+                    for (int k = 0; k < timeSlots; ++k)
+                    {
+                        costMatrix[i][j][k] = new int[userTypes];
+                    }
+                }
+            }
         }
 
         public void AddMatrix(int timeSlot, int userType, int[][] matrix)
         {
-            this.matrix.Add(new CostIndex(timeSlot, userType), matrix);
+            for (int i = 0; i < matrix.Length; ++i)
+            {
+                for (int j = 0; j < matrix[i].Length; ++j)
+                {
+                    costMatrix[i][j][timeSlot][userType] = matrix[j][i];
+                }
+            }
         }
 
-        public int GetCost(int timeSlot, int userType, int start, int destination) => matrix[new CostIndex(timeSlot, userType)][start][destination];
+        public int GetCost(int timeSlot, int userType, int start, int destination) => costMatrix[destination][start][timeSlot][userType];
 
-        public System.Tuple<CostIndex, int> GetMin(int destination, int[] taskPerUser)
+        public int[] GetMin(int destination, int[] taskPerUser, Availabilities availableUsers)
         {
-            int maxTask = taskPerUser.Max();
+            int minValue = int.MaxValue;
+            int minUser = 0;
+            int minTime = 0;
             int minStart = 0;
-            CostIndex minUserTime = new CostIndex();
-            int min = int.MaxValue;
-            foreach (var relativeCosts in matrix)
+            int maxTasks = 0;
+            for (int i = taskPerUser.Length; i-- > 0;)
             {
-                for (int i = 0; i < relativeCosts.Value.Length; ++i)
+                if (maxTasks < taskPerUser[i])
                 {
-                    if (i != destination)
+                    maxTasks = taskPerUser[i];
+                }
+            }
+            for (int start = costMatrix[0].Length; start-- > 0;)
+            {
+                if (start != destination)
+                {
+                    for (int timeSlot = costMatrix[0][0].Length; timeSlot-- > 0;)
                     {
-                        int cost = relativeCosts.Value[i][destination] * maxTask / taskPerUser[relativeCosts.Key.UserType];
-                        if (cost < min)
+                        for (int userType = costMatrix[0][0][0].Length;
+                            userType-- > 0;)
                         {
-                            min = cost;
-                            minStart = i;
-                            minUserTime = relativeCosts.Key;
+
+                            int weightedCost = unchecked(
+                                costMatrix[destination][start][timeSlot][userType] * maxTasks /
+                                               taskPerUser[userType]
+                            );
+                            if (minValue > weightedCost && availableUsers.HasUsers(start, timeSlot, userType))
+                            {
+                                minValue = weightedCost;
+                                minStart = start;
+                                minTime = timeSlot;
+                                minUser = userType;
+                            }
                         }
                     }
                 }
             }
-            return System.Tuple.Create(minUserTime, minStart);
+            return new[] { minStart, minTime, minUser };
         }
     }
 }

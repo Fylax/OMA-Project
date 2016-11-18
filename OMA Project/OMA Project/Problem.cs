@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
+// ReSharper disable PossibleNullReferenceException
 
 namespace OMA_Project
 {
@@ -53,13 +53,9 @@ namespace OMA_Project
             using (FileStream stream = new FileStream(inputFile, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.SequentialScan))
             using (StreamReader file = new StreamReader(stream, System.Text.Encoding.UTF8, true, 4096))
             {
-
-                string line;
-                string[] parts;
-
                 // Reads first row (# cell, # time slots, # user types)
-                line = file.ReadLine();
-                parts = line.Split(' ');
+                string line = file.ReadLine();
+                string[] parts = line.Split(' ');
                 int cells = int.Parse(parts[0]);
                 int timings = int.Parse(parts[1]);
                 int userTypes = int.Parse(parts[2]);
@@ -82,17 +78,15 @@ namespace OMA_Project
             }
         }
 
-        private void readMatrix(StreamReader file, int userTypes, int timings, int cells)
+        private void readMatrix(TextReader file, int userTypes, int timings, int cells)
         {
             int iterations = unchecked(userTypes * timings);
-            Matrix = new Costs(timings, userTypes);
-            string line;
-            string[] parts;
+            Matrix = new Costs(cells, timings, userTypes);
             file.ReadLine();
             for (int i = 0; i < iterations; ++i)
             {
-                line = file.ReadLine();
-                parts = line.Split(' ');
+                string line = file.ReadLine();
+                string[] parts = line.Split(' ');
                 int currentUserType = int.Parse(parts[0]);
                 int currentTimeSlot = int.Parse(parts[1]);
                 int[][] matrix = new int[cells][];
@@ -109,55 +103,19 @@ namespace OMA_Project
             }
         }
 
-        private void readAvailabilities(StreamReader file, int userTypes, int timings, int cells)
+        private void readAvailabilities(TextReader file, int userTypes, int timings, int cells)
         {
             Availabilty = new Availabilities(cells, timings, userTypes);
-            string line;
-            string[] parts;
             int iterations = unchecked(userTypes * timings);
             file.ReadLine();
             for (int i = 0; i < iterations; ++i)
             {
-                line = file.ReadLine();
-                parts = line.Split(' ');
+                string line = file.ReadLine();
+                string[] parts = line.Split(' ');
                 int currentUserType = int.Parse(parts[0]);
                 int currentTimeSlot = int.Parse(parts[1]);
                 line = file.ReadLine();
                 Availabilty.AddPair(currentTimeSlot, currentUserType, Array.ConvertAll(line.Trim().Split(' '), int.Parse));
-            }
-        }
-
-        public void GreedySolution()
-        {
-            int lowerBound = 0;
-            int upperBound = Tasks.Length;
-            int objFunct = 0;
-            int[] tasks = (int[])Tasks.Clone();
-            Availabilities av = Availabilty.Clone();
-
-            for (int i = 0; i < Tasks.Length; ++i)
-            {
-                int j = 1;
-                while (tasks[i] != 0)
-                {
-                    for (int u = 2; u >= 0; --u)
-                    {
-                        int res = tasks[i] / TaskPerUser[u];
-                        if (i+j < upperBound && av.GetUserNumber(i + j, 0, u) > res)
-                        {
-                            tasks[i] -= (res * TaskPerUser[u]);
-                            av.DecreaseUser(i + j, 0, u, res);
-                            objFunct += (res * Matrix.GetCost(0, u, i+j, i));
-                        }
-                        if (i-j >= lowerBound && av.GetUserNumber(i - j, 0, u) > res)
-                        {
-                            tasks[i] -= (res * TaskPerUser[u]);
-                            av.DecreaseUser(i - j, 0, u, res);
-                            objFunct += (res * Matrix.GetCost(0, u, i - j, i));
-                        }
-                    }
-                    ++j;
-                }
             }
         }
     }
