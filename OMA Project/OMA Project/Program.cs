@@ -12,7 +12,10 @@ namespace OMA_Project
         public static void Main()
         {
             Problem x = new Problem(@"C:\Users\Fylax\Desktop\Material_assignment\input\Co_300_20_NT_0.txt");
-            int[] h = x.Matrix.GetMin(1, x.TaskPerUser, x.Availabilty);
+            var p = Solver.GreedySolution(x);
+            int q = Solver.ObjectiveFunction(p, x);
+            //Console.WriteLine(q);
+            //Console.Read();
         }
     }
 }

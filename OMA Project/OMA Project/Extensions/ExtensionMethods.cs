@@ -15,12 +15,11 @@ namespace OMA_Project.Extensions
             for (int i = 0; i < source.Length; ++i)
             {
                 destination[i] = new int[source[i].Length][];
-                for (int j = 0; j < source[i].Length; ++i)
+                for (int j = 0; j < source[i].Length; ++j)
                 {
-                    source.CopyTo(destination[i][j], 0);
+                    destination[i][j] = (int[])source[i][j].Clone();
                 }
             }
-
             return destination;
         }
     }
