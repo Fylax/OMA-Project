@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Diagnostics;
+using System.Runtime.InteropServices.ComTypes;
+using System.Timers;
 
 namespace OMA_Project
 {
@@ -11,11 +8,30 @@ namespace OMA_Project
     {
         public static void Main()
         {
-            Problem x = new Problem(@"C:\Users\Fylax\Desktop\Material_assignment\input\Co_300_20_NT_0.txt");
-            var p = Solver.GreedySolution(x);
-            int q = Solver.ObjectiveFunction(p, x);
-            //Console.WriteLine(q);
-            //Console.Read();
+            Problem x = new Problem(@"C:\Users\Fylax\Desktop\Material_assignment\input\Co_30_1_NT_0.txt");
+            int min = int.MaxValue;
+            using (Timer r = new Timer(5000))
+            {
+                r.Elapsed += Callback;
+                r.Enabled = true;
+                while (r.Enabled)
+                {
+                    //qui va il codice
+                    var p = Solver.GreedySolution(x);
+                    int q = Solver.ObjectiveFunction(p, x);
+                    if (q < min)
+                    {
+                        min = q;
+                    }
+                }
+                Console.WriteLine(min);
+                Console.Read();
+            }
+        }
+
+        private static void Callback(object sender, ElapsedEventArgs e)
+        {
+            ((Timer) sender).Enabled = false;
         }
     }
 }

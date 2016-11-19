@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 
 namespace OMA_Project
 {
@@ -10,6 +11,7 @@ namespace OMA_Project
         /// 
         /// </summary>
         /// <param name="problem"></param>
+        /// <param name="startCell"></param>
         /// <returns>
         /// Array di (in ordine):
         /// 0. Cella di partenza
@@ -21,11 +23,20 @@ namespace OMA_Project
         public static HashSet<int[]> GreedySolution(Problem problem)
         {
             int[] tasks = new int[problem.Tasks.Length];
+            int totCell = problem.Matrix.Cells;
+            bool[] visited = new bool[totCell];
+            Random generator = new Random();
             HashSet<int[]> movings = new HashSet<int[]>();
             problem.Tasks.CopyTo(tasks, 0);
             Availabilities av = problem.Availabilty.Clone();
-            for (int cell = problem.Matrix.Cells; cell-- > 0;)
+            for (int i = totCell; --i >= 0;)
             {
+                int cell;
+                do
+                {
+                    cell = generator.Next(0, totCell);
+                } while (visited[cell]);
+                visited[cell] = true;
                 while (tasks[cell] != 0)
                 {
                     int[] minimum = problem.Matrix.GetMin(cell, problem.TaskPerUser, av);
