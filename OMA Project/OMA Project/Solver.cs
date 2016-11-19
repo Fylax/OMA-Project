@@ -39,7 +39,7 @@ namespace OMA_Project
                 visited[cell] = true;
                 while (tasks[cell] != 0)
                 {
-                    int[] minimum = problem.Matrix.GetMin(cell, problem.TaskPerUser, av);
+                    int[] minimum = problem.Matrix.GetRandomMin(cell, problem.TaskPerUser, av);
                     int available = av.GetUserNumber(minimum[0], minimum[1], minimum[2]);
                     if (available * problem.TaskPerUser[minimum[2]] >= tasks[cell])
                     {
@@ -61,7 +61,10 @@ namespace OMA_Project
 
         public static int ObjectiveFunction(HashSet<int[]> solution, Problem prob)
         {
-            return solution.Sum(sol => (prob.Matrix.GetCost(sol[2], sol[3], sol[0], sol[1])*sol[4]));
+            int sum = 0;
+            foreach (var sol in solution)
+                sum += (prob.Matrix.GetCost(sol[2], sol[3], sol[0], sol[1])*sol[4]);
+            return sum;
         }
     }
 }
