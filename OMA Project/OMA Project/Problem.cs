@@ -23,7 +23,7 @@ namespace OMA_Project
         /// </summary>
         public int[] Tasks
         {
-            get;
+            get; private set;
         }
 
         /// <summary>
@@ -31,7 +31,7 @@ namespace OMA_Project
         /// </summary>
         public int[] TaskPerUser
         {
-            get;
+            get; private set;
         }
 
         /// <summary>
@@ -48,8 +48,14 @@ namespace OMA_Project
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times")]
-        public Problem(string inputFile)
+        private Problem()
         {
+
+        }
+
+        public static Problem ReadFromFile(string inputFile)
+        {
+            Problem prob = new Problem();
             using (FileStream stream = new FileStream(inputFile, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.SequentialScan))
             using (StreamReader file = new StreamReader(stream, System.Text.Encoding.UTF8, true, 4096))
             {
@@ -63,60 +69,50 @@ namespace OMA_Project
                 // Read third row (# Tasks per user)
                 file.ReadLine();
                 line = file.ReadLine();
-                TaskPerUser = Array.ConvertAll(line.Trim().Split(' '), int.Parse);
+                prob.TaskPerUser = Array.ConvertAll(line.Trim().Split(' '), int.Parse);
 
                 // Reads and stores matrix of Matrix
-                readMatrix(file, userTypes, timings, cells);
+                int iterations = unchecked(userTypes * timings);
+                prob.Matrix = new Costs(cells, timings, userTypes);
+                file.ReadLine();
+                for (int i = 0; i < iterations; ++i)
+                {
+                    line = file.ReadLine();
+                    parts = line.Split(' ');
+                    int currentUserType = int.Parse(parts[0]);
+                    int currentTimeSlot = int.Parse(parts[1]);
+                    int[][] matrix = new int[cells][];
+                    for (int j = 0; j < cells; ++j)
+                    {
+                        // legge linea matrice considerando il punto (.) come separatore decimale
+                        // direttamente troncato (non arrotondato)
+                        line = file.ReadLine();
+                        matrix[j] = Array.ConvertAll(line.Trim().Split(' '), cost => (int)float.Parse(cost,
+                            System.Globalization.NumberStyles.AllowDecimalPoint,
+                            System.Globalization.NumberFormatInfo.InvariantInfo));
+                    }
+                    prob.Matrix.AddMatrix(currentTimeSlot, currentUserType, matrix);
+                }
 
                 // Reads and stores Tasks to be performed on each cell
                 file.ReadLine();
                 line = file.ReadLine();
-                Tasks = Array.ConvertAll(line.Trim().Split(' '), int.Parse);
+                prob.Tasks = Array.ConvertAll(line.Trim().Split(' '), int.Parse);
 
                 // Reads and stores different user availability on each cell, at different timings
-                readAvailabilities(file, userTypes, timings, cells);
-            }
-        }
-
-        private void readMatrix(TextReader file, int userTypes, int timings, int cells)
-        {
-            int iterations = unchecked(userTypes * timings);
-            Matrix = new Costs(cells, timings, userTypes);
-            file.ReadLine();
-            for (int i = 0; i < iterations; ++i)
-            {
-                string line = file.ReadLine();
-                string[] parts = line.Split(' ');
-                int currentUserType = int.Parse(parts[0]);
-                int currentTimeSlot = int.Parse(parts[1]);
-                int[][] matrix = new int[cells][];
-                for (int j = 0; j < cells; ++j)
+                prob.Availabilty = new Availabilities(cells, timings, userTypes);
+                file.ReadLine();
+                for (int i = 0; i < iterations; ++i)
                 {
-                    // legge linea matrice considerando il punto (.) come separatore decimale
-                    // direttamente troncato (non arrotondato)
                     line = file.ReadLine();
-                    matrix[j] = Array.ConvertAll(line.Trim().Split(' '), cost => (int)float.Parse(cost,
-                        System.Globalization.NumberStyles.AllowDecimalPoint,
-                        System.Globalization.NumberFormatInfo.InvariantInfo));
+                    parts = line.Split(' ');
+                    int currentUserType = int.Parse(parts[0]);
+                    int currentTimeSlot = int.Parse(parts[1]);
+                    line = file.ReadLine();
+                    prob.Availabilty.AddPair(currentTimeSlot, currentUserType, Array.ConvertAll(line.Trim().Split(' '), int.Parse));
                 }
-                Matrix.AddMatrix(currentTimeSlot, currentUserType, matrix);
             }
-        }
-
-        private void readAvailabilities(TextReader file, int userTypes, int timings, int cells)
-        {
-            Availabilty = new Availabilities(cells, timings, userTypes);
-            int iterations = unchecked(userTypes * timings);
-            file.ReadLine();
-            for (int i = 0; i < iterations; ++i)
-            {
-                string line = file.ReadLine();
-                string[] parts = line.Split(' ');
-                int currentUserType = int.Parse(parts[0]);
-                int currentTimeSlot = int.Parse(parts[1]);
-                line = file.ReadLine();
-                Availabilty.AddPair(currentTimeSlot, currentUserType, Array.ConvertAll(line.Trim().Split(' '), int.Parse));
-            }
+            return prob;
         }
     }
 }

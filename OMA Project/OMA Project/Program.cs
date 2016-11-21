@@ -8,7 +8,7 @@ namespace OMA_Project
     {
         public static void Main()
         {
-            Problem x = new Problem(@"D:\Dropbox\Uni Mattia\Magistrale\Primo semestre\Optimization methods and algorithms\material_assignment\Material_assignment\input\Co_30_1_NT_0.txt");
+            Problem x = Problem.ReadFromFile(@"C:\Users\Fylax\Desktop\Material_assignment\input\Co_30_1_NT_0.txt");
             using (Timer r = new Timer(5000))
             {
                 r.Elapsed += Callback;

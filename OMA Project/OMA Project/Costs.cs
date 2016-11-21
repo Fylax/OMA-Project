@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Sockets;
-using System.Runtime.InteropServices;
-
-namespace OMA_Project
+﻿namespace OMA_Project
 {
     public class Costs
     {

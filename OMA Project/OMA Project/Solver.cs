@@ -11,8 +11,7 @@ namespace OMA_Project
         /// 
         /// </summary>
         /// <param name="problem"></param>
-        /// <param name="startCell"></param>
-        /// <param name="newAvailabilities"></param>
+        /// <param name="av"></param>
         /// <returns>
         /// Array di (in ordine):
         /// 0. Cella di partenza
@@ -21,15 +20,14 @@ namespace OMA_Project
         /// 3. Tipo utente
         /// 4. Utenti utilizzati
         /// </returns>
-        public static List<int[]> GreedySolution(Problem problem, Availabilities newAvailabilities)
+        public static SortedSet<int[]> GreedySolution(Problem problem, Availabilities av)
         {
             int[] tasks = new int[problem.Tasks.Length];
             int totCell = problem.Matrix.Cells;
             bool[] visited = new bool[totCell];
             Random generator = new Random();
-            HashSet<int[]> movings = new HashSet<int[]>();
+            SortedSet<int[]> movings = new SortedSet<int[]>(new SolutionComparer());
             problem.Tasks.CopyTo(tasks, 0);
-            Availabilities av = problem.Availabilty.Clone();
             for (int i = totCell; --i >= 0;)
             {
                 int cell;
@@ -60,11 +58,10 @@ namespace OMA_Project
                     }
                 }
             }
-            newAvailabilities = av;
-            return movings.OrderBy(s => s[0]).ThenBy(s => s[1]).ToList();
+            return movings;
         }
 
-        public static bool GenerateNeighborhood(List<int[]> currentSolution, Availabilities availabilities, int[] taskPerUser)
+        public static bool GenerateNeighborhood(SortedSet<int[]> currentSolution, Availabilities availabilities, int[] taskPerUser)
         {
             Random seed = new Random();
             int randTuple = seed.Next(currentSolution.Count - 1);
@@ -112,26 +109,47 @@ namespace OMA_Project
                 availabilities.IncreaseUser(nextTuple[0], nextTuple[2], nextTuple[3], nextTuple[4]);
                 int baseRequiredUsers = (int)Math.Ceiling(baseTasks / (double)taskPerUser[nextTuple[3]]);
                 int nextRequiredUsers = (int)Math.Ceiling(nextTasks / (double)taskPerUser[baseTuple[3]]);
-                baseTuple[1] = nextDestination;
-                nextTuple[1] = baseDestination;
-                baseTuple[4] = baseRequiredUsers;
-                nextTuple[4] = nextRequiredUsers;
                 availabilities.DecreaseUser(baseTuple[0], baseTuple[2], baseTuple[3], nextRequiredUsers);
                 availabilities.DecreaseUser(nextTuple[0], nextTuple[2], nextTuple[3], baseRequiredUsers);
-                currentSolution.ElementAt(randTuple)[1] = nextDestination;
-                currentSolution.ElementAt(randTuple)[4] = baseRequiredUsers;
-                currentSolution.ElementAt(randMov)[1] = baseDestination;
-                currentSolution.ElementAt(randMov)[4] = nextRequiredUsers;
+                currentSolution.Remove(baseTuple);
+                currentSolution.Remove(nextTuple);
+                baseTuple[1] = nextDestination;
+                baseTuple[4] = baseRequiredUsers;
+                currentSolution.Add(baseTuple);
+                nextTuple[1] = baseDestination;
+                nextTuple[4] = nextRequiredUsers;
+                currentSolution.Add(nextTuple);
             }
             return swappable;
         }
 
-        public static int ObjectiveFunction(List<int[]> solution, Problem prob)
+        public static int ObjectiveFunction(IEnumerable<int[]> solution, Problem prob)
         {
-            int sum = 0;
-            foreach (var sol in solution)
-                sum += (prob.Matrix.GetCost(sol[2], sol[3], sol[0], sol[1]) * sol[4]);
-            return sum;
+            return solution.Sum(sol => (prob.Matrix.GetCost(sol[2], sol[3], sol[0], sol[1])*sol[4]));
+        }
+    }
+
+    internal class SolutionComparer : IComparer<int[]>
+    {
+        public int Compare(int[] x, int[] y)
+        {
+            if (x[0] > y[0])
+            {
+                return 1;
+            }
+            if (x[0] < y[0])
+            {
+                return -1;
+            }
+            if (x[1] > y[1])
+            {
+                return 1;
+            }
+            if (x[1] == y[1])
+            {
+                return 0;
+            }
+            return -1;
         }
     }
 }
