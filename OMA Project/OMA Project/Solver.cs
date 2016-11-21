@@ -21,7 +21,7 @@ namespace OMA_Project
         /// 3. Tipo utente
         /// 4. Utenti utilizzati
         /// </returns>
-        public static HashSet<int[]> GreedySolution(Problem problem, Availabilities newAvailabilities)
+        public static List<int[]> GreedySolution(Problem problem, Availabilities newAvailabilities)
         {
             int[] tasks = new int[problem.Tasks.Length];
             int totCell = problem.Matrix.Cells;
@@ -40,7 +40,7 @@ namespace OMA_Project
                 visited[cell] = true;
                 while (tasks[cell] != 0)
                 {
-                    int[] minimum = problem.Matrix.GetRandomMin(cell, problem.TaskPerUser, av);
+                    int[] minimum = problem.Matrix.GetMin(cell, problem.TaskPerUser, av);
                     int available = av.GetUserNumber(minimum[0], minimum[1], minimum[2]);
                     if (available * problem.TaskPerUser[minimum[2]] >= tasks[cell])
                     {
@@ -61,10 +61,10 @@ namespace OMA_Project
                 }
             }
             newAvailabilities = av;
-            return movings;
+            return movings.OrderBy(s => s[0]).ThenBy(s => s[1]).ToList();
         }
 
-        public static bool GenerateNeighborhood(HashSet<int[]> currentSolution, Availabilities availabilities, int[] taskPerUser)
+        public static bool GenerateNeighborhood(List<int[]> currentSolution, Availabilities availabilities, int[] taskPerUser)
         {
             Random seed = new Random();
             int randTuple = seed.Next(currentSolution.Count - 1);
@@ -126,7 +126,7 @@ namespace OMA_Project
             return swappable;
         }
 
-        public static int ObjectiveFunction(HashSet<int[]> solution, Problem prob)
+        public static int ObjectiveFunction(List<int[]> solution, Problem prob)
         {
             int sum = 0;
             foreach (var sol in solution)

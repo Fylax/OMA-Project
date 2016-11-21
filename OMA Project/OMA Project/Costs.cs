@@ -42,9 +42,12 @@ namespace OMA_Project
 
         public int GetCost(int timeSlot, int userType, int start, int destination) => costMatrix[destination][start][timeSlot][userType];
 
-        public int[] GetRandomMin(int destination, int[] taskPerUser, Availabilities availableUsers)
+        public int[] GetMin(int destination, int[] taskPerUser, Availabilities availableUsers)
         {
-            LinkedList<int[]> minima = new LinkedList<int[]>(); ;
+            int minValue = int.MaxValue;
+            int minUser = 0;
+            int minTime = 0;
+            int minStart = 0;
             int maxTasks = 0;
             for (int i = taskPerUser.Length; i-- > 0;)
             {
@@ -67,24 +70,18 @@ namespace OMA_Project
                                 costMatrix[destination][start][timeSlot][userType] * maxTasks /
                                                taskPerUser[userType]
                             );
-                            if (minima.Count == 0 && availableUsers.HasUsers(start, timeSlot, userType))
+                            if (minValue > weightedCost && availableUsers.HasUsers(start, timeSlot, userType))
                             {
-                                minima.AddFirst(new[] { weightedCost, start, timeSlot, userType });
-                            }
-                            else if (minima.Count != 0 && weightedCost < minima.Last()[0] && availableUsers.HasUsers(start, timeSlot, userType))
-                            {
-                                if (minima.Count == 4)
-                                {
-                                    minima.RemoveLast();
-                                }
-                                minima.AddFirst(new[] { weightedCost, start, timeSlot, userType });
+                                minValue = weightedCost;
+                                minStart = start;
+                                minTime = timeSlot;
+                                minUser = userType;
                             }
                         }
                     }
                 }
             }
-            Random r = new Random();
-            return minima.Select(m => new[] { m[1], m[2], m[3] }).ElementAt(r.Next(0, minima.Count));
+            return new[] { minStart, minTime, minUser };
         }
     }
 }
