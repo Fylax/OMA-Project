@@ -8,6 +8,7 @@ namespace OMA_Project
         /// </summary>
         private readonly int[][][] values;
 
+        public Availabilities() { }
         
         private Availabilities(Availabilities av)
         {
@@ -77,6 +78,12 @@ namespace OMA_Project
         {
             values[cell][timeSlot][userType] -= used;
         }
+
+        public void IncreaseUser(int cell, int timeSlot, int userType, int used)
+        {
+            values[cell][timeSlot][userType] += used;
+        }
+
 
         /// <summary>
         /// Crea una versione clonata delle disponibilità

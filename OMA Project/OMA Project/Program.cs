@@ -8,30 +8,32 @@ namespace OMA_Project
     {
         public static void Main()
         {
-            Problem x = new Problem(@"C:\Users\Fylax\Desktop\Material_assignment\input\Co_30_1_NT_0.txt");
-            int min = int.MaxValue;
-            /*using (Timer r = new Timer(5000))
+            Problem x = new Problem(@"D:\Dropbox\Uni Mattia\Magistrale\Primo semestre\Optimization methods and algorithms\material_assignment\Material_assignment\input\Co_30_1_NT_0.txt");
+            using (Timer r = new Timer(5000))
             {
                 r.Elapsed += Callback;
                 r.Enabled = true;
+                var m = x.Availabilty.Clone();
+                var p = Solver.GreedySolution(x, m);
+                int q = Solver.ObjectiveFunction(p, x);
+                int bestUntilNow = q;
                 while (r.Enabled)
-                {*/
-                    //qui va il codice
-                    var p = Solver.GreedySolution(x);
-                    int q = Solver.ObjectiveFunction(p, x);
-                    if (q < min)
+                {
+                    while (!Solver.GenerateNeighborhood(p, m, x.TaskPerUser)) { }
+                    int partial = Solver.ObjectiveFunction(p, x);
+                    if (partial < bestUntilNow)
                     {
-                        min = q;
+                        bestUntilNow = partial;
                     }
-                //}
-                Console.WriteLine(min);
+                }
+                Console.WriteLine(bestUntilNow);
                 Console.Read();
-            //}
+            }
         }
 
-        /*private static void Callback(object sender, ElapsedEventArgs e)
+        private static void Callback(object sender, ElapsedEventArgs e)
         {
-            ((Timer) sender).Enabled = false;
-        }*/
+            ((Timer)sender).Enabled = false;
+        }
     }
 }
