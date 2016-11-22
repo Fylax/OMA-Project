@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Timers;
 using OMA_Project.Extensions;
 
@@ -16,20 +17,29 @@ namespace OMA_Project
                 r.Enabled = true;
                 var m = x.Availabilty.Clone();
                 SortedSet<int[]> currentSolution = Solver.GreedySolution(x, m);
-                int q = Solver.ObjectiveFunction(currentSolution, x);
-                int bestUntilNow = q;
+                SortedSet<int[]> bestSolution = currentSolution.DeepClone();
+                int iterations = 0;
+                int interval = 1;
+                const double alpha = 0.8;
+                const int T0 = 10000;
+                int bestFitness = Solver.ObjectiveFunction(bestSolution, x.Matrix);
                 while (r.Enabled)
                 {
-                    SortedSet<int[]> tempSolution = currentSolution.DeepClone();
-                    while (!Solver.GenerateNeighborhood(tempSolution, m, x.TaskPerUser)) { }
-                    int partial = Solver.ObjectiveFunction(tempSolution, x);
-                    if (partial < bestUntilNow)
+                    int tempFitness = Solver.SimulatedAnnealing(ref currentSolution, x, Math.Pow(alpha, interval) * T0);
+                    if (tempFitness < bestFitness)
                     {
-                        bestUntilNow = partial;
-                        currentSolution = tempSolution.DeepClone();
+                        bestSolution = currentSolution.DeepClone();
+                        bestFitness = tempFitness;
                     }
+                    if (++iterations % interval == 0)
+                    {
+                        ++interval;
+                        iterations = 0;
+                    }
+
                 }
-                Console.WriteLine(bestUntilNow);
+                bestFitness = Solver.ObjectiveFunction(bestSolution, x.Matrix);
+                Console.WriteLine(bestFitness);
                 Console.Read();
             }
         }

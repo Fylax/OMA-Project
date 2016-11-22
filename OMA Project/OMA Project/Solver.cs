@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
+using OMA_Project.Extensions;
 
 namespace OMA_Project
 {
@@ -123,9 +124,35 @@ namespace OMA_Project
             return swappable;
         }
 
-        public static int ObjectiveFunction(IEnumerable<int[]> solution, Problem prob)
+        public static int ObjectiveFunction(IEnumerable<int[]> solution, Costs matrix)
         {
-            return solution.Sum(sol => (prob.Matrix.GetCost(sol[2], sol[3], sol[0], sol[1])*sol[4]));
+            return solution.Sum(sol => (matrix.GetCost(sol[2], sol[3], sol[0], sol[1]) * sol[4]));
+        }
+
+        public static int SimulatedAnnealing(ref SortedSet<int[]> currentSolution, Problem problem, double temperature)
+        {
+            SortedSet<int[]> neighborSolution = currentSolution.DeepClone();
+            while (!GenerateNeighborhood(neighborSolution, problem.Availabilty, problem.TaskPerUser)) { }
+
+            int currentFitness = ObjectiveFunction(currentSolution, problem.Matrix);
+            int neighborFitness = ObjectiveFunction(neighborSolution, problem.Matrix);
+
+            if (neighborFitness < currentFitness)
+            {
+                currentSolution = neighborSolution;
+                return neighborFitness;
+            }
+
+            double pHat =
+                Math.Exp((-neighborFitness-currentFitness) / temperature);
+            Random r = new Random();
+            double p = r.NextDouble();
+            if (p < pHat)
+            {
+                currentSolution = neighborSolution;
+                return neighborFitness;
+            }
+            return currentFitness;
         }
     }
 
