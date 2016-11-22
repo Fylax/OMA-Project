@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+
 namespace OMA_Project.Extensions
 {
     public static class ExtensionMethods
@@ -19,6 +21,16 @@ namespace OMA_Project.Extensions
                 {
                     destination[i][j] = (int[])source[i][j].Clone();
                 }
+            }
+            return destination;
+        }
+
+        public static SortedSet<int[]> DeepClone(this SortedSet<int[]> source)
+        {
+            SortedSet<int[]> destination = new SortedSet<int[]>(source.Comparer);
+            foreach (int[] elem in source)
+            {
+                destination.Add((int[])elem.Clone());
             }
             return destination;
         }

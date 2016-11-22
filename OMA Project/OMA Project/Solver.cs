@@ -49,10 +49,10 @@ namespace OMA_Project
                     }
                     else
                     {
-                        av.DecreaseUser(minimum[0], minimum[1], minimum[2], available);
-                        tasks[cell] -= available;
                         if (available != 0)
                         {
+                            av.DecreaseUser(minimum[0], minimum[1], minimum[2], available);
+                            tasks[cell] -= available;
                             movings.Add(new[] { minimum[0], cell, minimum[1], minimum[2], available });
                         }
                     }
@@ -133,23 +133,17 @@ namespace OMA_Project
     {
         public int Compare(int[] x, int[] y)
         {
-            if (x[0] > y[0])
-            {
-                return 1;
-            }
-            if (x[0] < y[0])
-            {
-                return -1;
-            }
-            if (x[1] > y[1])
-            {
-                return 1;
-            }
-            if (x[1] == y[1])
-            {
-                return 0;
-            }
-            return -1;
+            if (x[1] > y[1]) return 1;
+            if (x[1] < y[1]) return -1;
+            if (x[0] > y[0]) return 1;
+            if (x[0] < y[0]) return -1;
+            if (x[2] > y[2]) return 1;
+            if (x[2] < y[2]) return -1;
+            if (x[3] > y[3]) return 1;
+            if (x[3] < y[3]) return -1;
+            if (x[4] > y[4]) return 1;
+            if (x[4] < y[4]) return -1;
+            return 0;
         }
     }
 }

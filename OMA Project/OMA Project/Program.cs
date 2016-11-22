@@ -1,6 +1,7 @@
 ﻿using System;
-using System.Runtime.InteropServices.ComTypes;
+using System.Collections.Generic;
 using System.Timers;
+using OMA_Project.Extensions;
 
 namespace OMA_Project
 {
@@ -14,16 +15,18 @@ namespace OMA_Project
                 r.Elapsed += Callback;
                 r.Enabled = true;
                 var m = x.Availabilty.Clone();
-                var p = Solver.GreedySolution(x, m);
-                int q = Solver.ObjectiveFunction(p, x);
+                SortedSet<int[]> currentSolution = Solver.GreedySolution(x, m);
+                int q = Solver.ObjectiveFunction(currentSolution, x);
                 int bestUntilNow = q;
                 while (r.Enabled)
                 {
-                    while (!Solver.GenerateNeighborhood(p, m, x.TaskPerUser)) { }
-                    int partial = Solver.ObjectiveFunction(p, x);
+                    SortedSet<int[]> tempSolution = currentSolution.DeepClone();
+                    while (!Solver.GenerateNeighborhood(tempSolution, m, x.TaskPerUser)) { }
+                    int partial = Solver.ObjectiveFunction(tempSolution, x);
                     if (partial < bestUntilNow)
                     {
                         bestUntilNow = partial;
+                        currentSolution = tempSolution.DeepClone();
                     }
                 }
                 Console.WriteLine(bestUntilNow);
