@@ -19,21 +19,22 @@ namespace OMA_Project
                 SortedSet<int[]> currentSolution = Solver.GreedySolution(x, m);
                 SortedSet<int[]> bestSolution = currentSolution.DeepClone();
                 int iterations = 0;
-                int interval = 1;
-                const double alpha = 0.8;
+                int exponent = 0;
+                const int plateauLength = 4;
+                const double alpha = 0.6;
                 const int T0 = 10000;
                 int bestFitness = Solver.ObjectiveFunction(bestSolution, x.Matrix);
                 while (r.Enabled)
                 {
-                    int tempFitness = Solver.SimulatedAnnealing(ref currentSolution, x, Math.Pow(alpha, interval) * T0);
+                    int tempFitness = Solver.SimulatedAnnealing(ref currentSolution, x, Math.Pow(alpha, exponent) * T0);
                     if (tempFitness < bestFitness)
                     {
                         bestSolution = currentSolution.DeepClone();
                         bestFitness = tempFitness;
                     }
-                    if (++iterations % interval == 0)
+                    if (++iterations % plateauLength == 0)
                     {
-                        ++interval;
+                        ++exponent;
                         iterations = 0;
                     }
 
