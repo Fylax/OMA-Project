@@ -25,12 +25,12 @@ namespace OMA_Project.Extensions
             return destination;
         }
 
-        public static SortedSet<int[]> DeepClone(this SortedSet<int[]> source)
+        public static LinkedList<int[]> DeepClone(this LinkedList<int[]> source)
         {
-            SortedSet<int[]> destination = new SortedSet<int[]>(source.Comparer);
+            LinkedList<int[]> destination = new LinkedList<int[]>();
             foreach (int[] elem in source)
             {
-                destination.Add((int[])elem.Clone());
+                destination.AddLast((int[])elem.Clone());
             }
             return destination;
         }

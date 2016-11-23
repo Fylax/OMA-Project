@@ -10,23 +10,28 @@ namespace OMA_Project
     {
         public static void Main()
         {
-            Problem x = Problem.ReadFromFile(@"C:\Users\Fylax\Desktop\Material_assignment\input\Co_30_1_NT_0.txt");
+            Problem x = Problem.ReadFromFile(@"D:\Dropbox\Uni Mattia\Magistrale\Primo semestre\Optimization methods and algorithms\material_assignment\Material_assignment\input\Co_30_1_NT_0.txt");
             using (Timer r = new Timer(5000))
             {
                 r.Elapsed += Callback;
                 r.Enabled = true;
                 var m = x.Availabilty.Clone();
-                SortedSet<int[]> currentSolution = Solver.GreedySolution(x, m);
-                SortedSet<int[]> bestSolution = currentSolution.DeepClone();
+                LinkedList<int[]> currentSolution = Solver.GreedySolution(x, m.Clone());
+                LinkedList<int[]> bestSolution = currentSolution.DeepClone();
                 int iterations = 0;
                 int exponent = 0;
-                const int plateauLength = 4;
-                const double alpha = 0.6;
-                const int T0 = 10000;
+                const int plateauLength = 30;
+                const double alpha = 0.9;
+                const int T0 = 1000;
                 int bestFitness = Solver.ObjectiveFunction(bestSolution, x.Matrix);
+                ulong counter = 0;
                 while (r.Enabled)
                 {
-                    int tempFitness = Solver.SimulatedAnnealing(ref currentSolution, x, Math.Pow(alpha, exponent) * T0);
+                    counter++;
+                    //currentSolution = Solver.GreedySolution(x, m.Clone());
+                    //int tempFitness = Solver.ObjectiveFunction(currentSolution, x.Matrix);
+                    
+                    int tempFitness = Solver.SimulatedAnnealing(ref currentSolution, x, m, Math.Pow(alpha, exponent) * T0);
                     if (tempFitness < bestFitness)
                     {
                         bestSolution = currentSolution.DeepClone();
@@ -37,10 +42,9 @@ namespace OMA_Project
                         ++exponent;
                         iterations = 0;
                     }
-
+                    
                 }
-                bestFitness = Solver.ObjectiveFunction(bestSolution, x.Matrix);
-                Console.WriteLine(bestFitness);
+                Console.WriteLine("Obj "+bestFitness);
                 Console.Read();
             }
         }

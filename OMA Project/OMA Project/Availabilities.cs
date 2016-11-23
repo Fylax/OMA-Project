@@ -67,6 +67,25 @@ namespace OMA_Project
         /// <returns />
         public bool HasUsers(int cell, int timeSlot, int userType) => values[cell][timeSlot][userType] != 0;
 
+        public int TotalUsers
+        {
+            get
+            {
+                int tot = 0;
+                for(int i = 0; i < values.Length; ++i)
+                {
+                    for(int j =0; j<values[i].Length;++j)
+                    {
+                        for(int k = 0; k < values[i][j].Length;++k)
+                        {
+                            tot += values[i][j][k];
+                        }
+                    }
+                }
+                return tot;
+            }
+        }
+
         /// <summary>
         /// Utilizza utenti attualmente in una cella
         /// </summary>
