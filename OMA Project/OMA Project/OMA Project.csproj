@@ -63,11 +63,13 @@
     <Compile Include="Availabilities.cs" />
     <Compile Include="Costs.cs" />
     <Compile Include="Extensions\ExtensionMethods.cs" />
+    <Compile Include="Feasability.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Problem.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Solver.cs" />
+    <Compile Include="WriteSolution.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

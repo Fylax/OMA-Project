@@ -25,7 +25,6 @@ namespace OMA_Project
         public static LinkedList<int[]> GreedySolution(Problem problem, Availabilities av)
         {
             int totCell = problem.Matrix.Cells;
-            int[] tasks = new int[totCell];
             bool[] visited = new bool[totCell];
             Random generator = new Random();
             LinkedList<int[]> movings = new LinkedList<int[]>();
@@ -42,7 +41,7 @@ namespace OMA_Project
             return movings;
         }
 
-        private static LinkedList<int[]> SolveTasks(int destination, int tasks, Costs costs, Availabilities av, int[] taskPerUser, LinkedList<int[]> movings)
+        private static void SolveTasks(int destination, int tasks, Costs costs, Availabilities av, int[] taskPerUser, LinkedList<int[]> movings)
         {
             while (tasks != 0)
             {
@@ -50,7 +49,7 @@ namespace OMA_Project
                 int available = av.GetUserNumber(minimum[0], minimum[1], minimum[2]);
                 if (available * taskPerUser[minimum[2]] >= tasks)
                 {
-                    int used = (int)Math.Ceiling(unchecked(tasks / (double)taskPerUser[minimum[2]]));
+                    int used = (int)Math.Ceiling(tasks / (double)taskPerUser[minimum[2]]);
                     av.DecreaseUser(minimum[0], minimum[1], minimum[2], used);
                     movings.AddFirst(new[] { minimum[0], destination, minimum[1], minimum[2], used, tasks });
                     tasks = 0;
@@ -65,12 +64,11 @@ namespace OMA_Project
                     }
                 }
             }
-            return movings;
         }
 
 
 
-        public static void GenerateNeighborhood(LinkedList<int[]> currentSolution, Problem problem, Availabilities newAvailabilities)
+        private static void GenerateNeighborhood(LinkedList<int[]> currentSolution, Problem problem, Availabilities newAvailabilities)
         {
 
             Random seed = new Random();
