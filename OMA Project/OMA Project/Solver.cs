@@ -70,72 +70,18 @@ namespace OMA_Project
 
         private static void GenerateNeighborhood(LinkedList<int[]> currentSolution, Problem problem, Availabilities newAvailabilities)
         {
-
-            Random seed = new Random();
-            int randTuple = seed.Next(currentSolution.Count - 1);            
-            int[] droppedTuple = currentSolution.ElementAt(randTuple);
-            currentSolution.Remove(droppedTuple);
-            int currentlyAvailableUsers = newAvailabilities.GetUserNumber(droppedTuple[0],droppedTuple[2], droppedTuple[3]);
-            newAvailabilities.DecreaseUser(droppedTuple[0], droppedTuple[2], droppedTuple[3], currentlyAvailableUsers);
-            int totalAvailableUsers = currentlyAvailableUsers + droppedTuple[4];
-            int tasks = droppedTuple[5];
-            SolveTasks(droppedTuple[1], tasks, problem.Matrix, newAvailabilities, problem.TaskPerUser, currentSolution);
-            newAvailabilities.IncreaseUser(droppedTuple[0], droppedTuple[2], droppedTuple[3], totalAvailableUsers);
-            /*
-            int randMov;
-            do
-            {
-                randMov = seed.Next(currentSolution.Count - 1);
-            }
-            while (randMov != randTuple);
-
-            int[] baseTuple = currentSolution.ElementAt(randTuple);
-            int[] nextTuple = currentSolution.ElementAt(randMov);
-            int baseTasks = baseTuple[4] * problem.TaskPerUser[baseTuple[3]];
-            int nextTasks = nextTuple[4] * problem.TaskPerUser[nextTuple[3]];
-            bool swappable = false;
-            if (baseTasks > nextTasks)
-            {
-                int totalNextUsers = newAvailabilities.GetUserNumber(nextTuple[0], nextTuple[2], nextTuple[3]) + nextTuple[4];
-                int totalNextTasks = totalNextUsers * problem.TaskPerUser[nextTuple[3]];
-                if (totalNextTasks >= baseTasks)
-                {
-                    swappable = true;
-                }
-            }
-            else if (baseTasks < nextTasks)
-            {
-                int totalBaseUsers = newAvailabilities.GetUserNumber(baseTuple[0], baseTuple[2], baseTuple[3]) + baseTuple[4];
-                int totalBaseTasks = totalBaseUsers * problem.TaskPerUser[baseTuple[3]];
-                if (totalBaseTasks >= baseTasks)
-                {
-                    swappable = true;
-                }
-            }
-            else
-            {
-                swappable = true;
-            }
-            if (swappable)
-            {
-                int baseDestination = baseTuple[1];
-                int nextDestination = nextTuple[1];
-                newAvailabilities.IncreaseUser(baseTuple[0], baseTuple[2], baseTuple[3], baseTuple[4]);
-                newAvailabilities.IncreaseUser(nextTuple[0], nextTuple[2], nextTuple[3], nextTuple[4]);
-                int baseRequiredUsers = (int)Math.Ceiling(baseTasks / (double)problem.TaskPerUser[nextTuple[3]]);
-                int nextRequiredUsers = (int)Math.Ceiling(nextTasks / (double)problem.TaskPerUser[baseTuple[3]]);
-                newAvailabilities.DecreaseUser(baseTuple[0], baseTuple[2], baseTuple[3], nextRequiredUsers);
-                newAvailabilities.DecreaseUser(nextTuple[0], nextTuple[2], nextTuple[3], baseRequiredUsers);
-                currentSolution.Remove(baseTuple);
-                currentSolution.Remove(nextTuple);
-                baseTuple[1] = nextDestination;
-                baseTuple[4] = baseRequiredUsers;
-                currentSolution.AddFirst(baseTuple);
-                nextTuple[1] = baseDestination;
-                nextTuple[4] = nextRequiredUsers;
-                currentSolution.AddLast(nextTuple);
-            }
-        */
+            Random generator = new Random();
+            int randIndex = generator.Next(currentSolution.Count);
+            int[] randTuple = currentSolution.ElementAt(randIndex);
+            currentSolution.Remove(randTuple);
+            int remainingUsers = newAvailabilities.GetUserNumber(randTuple[0], randTuple[2], randTuple[3]);
+            int totalUsers = remainingUsers + randTuple[4];
+            newAvailabilities.DecreaseUser(randTuple[0], randTuple[2], randTuple[3], remainingUsers);
+            Console.WriteLine("Rimanevano " + remainingUsers);
+            Console.WriteLine("Usavo " + randTuple[4]);
+            SolveTasks(randTuple[1], randTuple[5], problem.Matrix, newAvailabilities, problem.TaskPerUser, currentSolution);
+            newAvailabilities.IncreaseUser(randTuple[0], randTuple[2], randTuple[3], totalUsers);
+            Console.WriteLine("Aggiungo " + totalUsers);
         }
 
         public static int ObjectiveFunction(IEnumerable<int[]> solution, Costs matrix)

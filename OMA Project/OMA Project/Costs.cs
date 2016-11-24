@@ -38,6 +38,10 @@
 
         public int[] GetMin(int destination, int[] taskPerUser, Availabilities availableUsers)
         {
+            if(availableUsers.TotalUsers == 0)
+            {
+                var x = 0;
+            }
             int minValue = int.MaxValue;
             int minUser = 0;
             int minTime = 0;
