@@ -95,12 +95,14 @@ namespace OMA_Project
         /// <param name="used">Numero di utenti utilizzati</param>
         public void DecreaseUser(int cell, int timeSlot, int userType, int used)
         {
-            values[cell][timeSlot][userType] -= used;
+            int current = values[cell][timeSlot][userType];
+            values[cell][timeSlot][userType] = current - used;
         }
 
         public void IncreaseUser(int cell, int timeSlot, int userType, int used)
         {
-            values[cell][timeSlot][userType] += used;
+            int current = values[cell][timeSlot][userType];
+            values[cell][timeSlot][userType] = current + used;
         }
 
 

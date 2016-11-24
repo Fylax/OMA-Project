@@ -76,12 +76,15 @@ namespace OMA_Project
             currentSolution.Remove(randTuple);
             int remainingUsers = newAvailabilities.GetUserNumber(randTuple[0], randTuple[2], randTuple[3]);
             int totalUsers = remainingUsers + randTuple[4];
+            if (totalUsers > problem.Availabilty.GetUserNumber(randTuple[0], randTuple[2], randTuple[3]))
+            {
+                var x = currentSolution.Where(s => s[0] == randTuple[0] && s[3] == randTuple[3]).ToList();
+                var y = problem.Availabilty.GetUserNumber(randTuple[0], randTuple[2], randTuple[3]);
+            }
             newAvailabilities.DecreaseUser(randTuple[0], randTuple[2], randTuple[3], remainingUsers);
-            Console.WriteLine("Rimanevano " + remainingUsers);
-            Console.WriteLine("Usavo " + randTuple[4]);
             SolveTasks(randTuple[1], randTuple[5], problem.Matrix, newAvailabilities, problem.TaskPerUser, currentSolution);
             newAvailabilities.IncreaseUser(randTuple[0], randTuple[2], randTuple[3], totalUsers);
-            Console.WriteLine("Aggiungo " + totalUsers);
+            //Console.WriteLine("Rimanevano " + remainingUsers + "\nUsati " + randTuple[4] + "\nAggiungo " + totalUsers);
         }
 
         public static int ObjectiveFunction(IEnumerable<int[]> solution, Costs matrix)

@@ -10,14 +10,14 @@ namespace OMA_Project
     {
         public static void Main(string[] args)
         {
-            Problem x = Problem.ReadFromFile(@"D:\Dropbox\Uni Mattia\Magistrale\Primo semestre\Optimization methods and algorithms\material_assignment\Material_assignment\input\Co_30_1_NT_0.txt");
+            Problem x = Problem.ReadFromFile(@"C:\Users\Fylax\Desktop\Material_assignment\input\Co_30_1_NT_0.txt");
             using (Timer r = new Timer(4850))
             {
                 Stopwatch s = Stopwatch.StartNew();
                 r.Elapsed += Callback;
                 r.Enabled = true;
                 var m = x.Availabilty.Clone();
-                LinkedList<int[]> currentSolution = Solver.GreedySolution(x, m.Clone());
+                LinkedList<int[]> currentSolution = Solver.GreedySolution(x, m);
                 LinkedList<int[]> bestSolution = currentSolution.DeepClone();
            
                 int iterations = 0;
