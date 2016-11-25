@@ -61,12 +61,9 @@ namespace OMA_Project
                 }
                 else
                 {
-                    if (available != 0)
-                    {
-                        problem.Availability[minimum[0]][minimum[1]][minimum[2]] -= available;
-                        tasks = unchecked(tasks - (available * problem.TaskPerUser[minimum[2]]));
-                        movings.AddLast(new[] { minimum[0], destination, minimum[1], minimum[2], available, unchecked(available * problem.TaskPerUser[minimum[2]]) });
-                    }
+                    problem.Availability[minimum[0]][minimum[1]][minimum[2]] -= available;
+                    tasks = unchecked(tasks - (available * problem.TaskPerUser[minimum[2]]));
+                    movings.AddLast(new[] { minimum[0], destination, minimum[1], minimum[2], available, unchecked(available * problem.TaskPerUser[minimum[2]]) });
                 }
             }
         }
