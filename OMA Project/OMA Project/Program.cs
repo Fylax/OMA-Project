@@ -3,7 +3,8 @@ using System.Diagnostics;
 using System.Timers;
 using OMA_Project.Extensions;
 using System;
-using System.Linq;
+using System.Runtime;
+using System.Runtime.CompilerServices;
 
 namespace OMA_Project
 {
@@ -13,6 +14,12 @@ namespace OMA_Project
         public static void Main(string[] args)
         {
             Problem x = Problem.ReadFromFile(@"C:\Users\Fylax\Desktop\Material_assignment\input\Co_30_1_NT_0.txt");
+
+            GC.Collect();
+            RuntimeHelpers.PrepareConstrainedRegions();
+            GCSettings.LatencyMode = GCLatencyMode.LowLatency;
+            GC.TryStartNoGCRegion(107400000);
+
             using (Timer r = new Timer(4850))
             {
                 Stopwatch s = Stopwatch.StartNew();
@@ -27,7 +34,7 @@ namespace OMA_Project
                 int exponent = 0;
                 const int plateauLength = 15;
                 const double alpha = 0.8;
-                const int T0 = 1000;
+                const int T0 = 500;
                 ulong counter = 0;
                 while (r.Enabled)
                 {
@@ -45,6 +52,7 @@ namespace OMA_Project
                     }
                 }
                 s.Stop();
+
                 WriteSolution.Write(args[1], bestSolution, bestFitness, s.ElapsedMilliseconds, args[0]);
             }
         }

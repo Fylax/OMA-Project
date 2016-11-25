@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
 using OMA_Project.Extensions;
 
 namespace OMA_Project
@@ -74,15 +73,17 @@ namespace OMA_Project
 
         private void GenerateNeighborhood(LinkedList<int[]> currentSolution)
         {
-            int randIndex = new Random().Next(currentSolution.Count);
-            int[] randTuple = currentSolution.ElementAt(randIndex);
-            currentSolution.Remove(randTuple);
-            int remainingUsers = problem.Availability[randTuple[0]][randTuple[2]][randTuple[3]];
-            int totalUsers = remainingUsers + randTuple[4];
-            problem.Availability[randTuple[0]][randTuple[2]][randTuple[3]] = 0;
-            SolveTasks(randTuple[1], randTuple[5], currentSolution);
-            problem.Availability[randTuple[0]][randTuple[2]][randTuple[3]] += totalUsers;
-            //Console.WriteLine("Rimanevano " + remainingUsers + "\nUsati " + randTuple[4] + "\nAggiungo " + totalUsers);
+            lock (problem.Availability)
+            {
+                int randIndex = new Random().Next(currentSolution.Count);
+                int[] randTuple = currentSolution.ElementAt(randIndex);
+                currentSolution.Remove(randTuple);
+                int remainingUsers = problem.Availability[randTuple[0]][randTuple[2]][randTuple[3]];
+                int totalUsers = remainingUsers + randTuple[4];
+                problem.Availability[randTuple[0]][randTuple[2]][randTuple[3]] = 0;
+                SolveTasks(randTuple[1], randTuple[5], currentSolution);
+                problem.Availability[randTuple[0]][randTuple[2]][randTuple[3]] += totalUsers;
+            }
         }
 
         public int ObjectiveFunction(IEnumerable<int[]> solution)
@@ -93,6 +94,7 @@ namespace OMA_Project
         public int SimulatedAnnealing(ref LinkedList<int[]> currentSolution, double temperature)
         {
             LinkedList<int[]> neighborSolution = currentSolution.DeepClone();
+            int[][][] availabilities = problem.Availability.DeepClone();
             GenerateNeighborhood(neighborSolution);
 
             int currentFitness = ObjectiveFunction(currentSolution);
@@ -111,6 +113,7 @@ namespace OMA_Project
                 currentSolution = neighborSolution;
                 return neighborFitness;
             }
+            problem.Availability = availabilities;
             return currentFitness;
         }
     }
