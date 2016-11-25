@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using OMA_Project.Extensions;
+
 // ReSharper disable PossibleNullReferenceException
 
 namespace OMA_Project
@@ -41,18 +43,20 @@ namespace OMA_Project
         ///     <item>valore = utenti disponibili per cella</item>
         /// </list>
         /// </summary>
-        public Availabilities Availabilty
+        public int[][][] Availability
         {
             get;
             private set;
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times")]
+        public int[][][] immutableAvailability;
+
         private Problem()
         {
 
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times")]
         public static Problem ReadFromFile(string inputFile)
         {
             Problem prob = new Problem();
@@ -100,7 +104,15 @@ namespace OMA_Project
                 prob.Tasks = Array.ConvertAll(line.Trim().Split(' '), int.Parse);
 
                 // Reads and stores different user availability on each cell, at different timings
-                prob.Availabilty = new Availabilities(cells, timings, userTypes);
+                prob.Availability = new int[cells][][];
+                for (int i = 0; i < cells; ++i)
+                {
+                    prob.Availability[i] = new int[timings][];
+                    for (int j = 0; j < timings; ++j)
+                    {
+                        prob.Availability[i][j] = new int[userTypes];
+                    }
+                }
                 file.ReadLine();
                 for (int i = 0; i < iterations; ++i)
                 {
@@ -109,9 +121,14 @@ namespace OMA_Project
                     int currentUserType = int.Parse(parts[0]);
                     int currentTimeSlot = int.Parse(parts[1]);
                     line = file.ReadLine();
-                    prob.Availabilty.AddPair(currentTimeSlot, currentUserType, Array.ConvertAll(line.Trim().Split(' '), int.Parse));
+                    int[] userNumber = Array.ConvertAll(line.Trim().Split(' '), int.Parse);
+                    for (int j = 0; j < userNumber.Length; ++j)
+                    {
+                        prob.Availability[j][currentTimeSlot][currentUserType] = userNumber[j];
+                    }
                 }
             }
+            prob.immutableAvailability = prob.Availability.DeepClone();
             return prob;
         }
     }

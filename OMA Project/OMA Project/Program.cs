@@ -3,11 +3,13 @@ using System.Diagnostics;
 using System.Timers;
 using OMA_Project.Extensions;
 using System;
+using System.Linq;
 
 namespace OMA_Project
 {
     internal static class Program
     {
+        public static List<int> totalUsers = new List<int>();
         public static void Main(string[] args)
         {
             Problem x = Problem.ReadFromFile(@"C:\Users\Fylax\Desktop\Material_assignment\input\Co_30_1_NT_0.txt");
@@ -16,24 +18,20 @@ namespace OMA_Project
                 Stopwatch s = Stopwatch.StartNew();
                 r.Elapsed += Callback;
                 r.Enabled = true;
-                var m = x.Availabilty.Clone();
-                LinkedList<int[]> currentSolution = Solver.GreedySolution(x, m);
+                LinkedList<int[]> currentSolution = Solver.GreedySolution(x);
                 LinkedList<int[]> bestSolution = currentSolution.DeepClone();
-           
+                int bestFitness = Solver.ObjectiveFunction(currentSolution, x.Matrix);
+
                 int iterations = 0;
                 int exponent = 0;
                 const int plateauLength = 15;
                 const double alpha = 0.8;
                 const int T0 = 1000;
-                int bestFitness = Solver.ObjectiveFunction(currentSolution, x.Matrix);
                 ulong counter = 0;
                 while (r.Enabled)
                 {
                     counter++;
-                    //currentSolution = Solver.GreedySolution(x, m.Clone());
-                    //int tempFitness = Solver.ObjectiveFunction(currentSolution, x.Matrix);
-                    
-                    int tempFitness = Solver.SimulatedAnnealing(ref currentSolution, x, m, Math.Pow(alpha, exponent) * T0);
+                    int tempFitness = Solver.SimulatedAnnealing(ref currentSolution, x, Math.Pow(alpha, exponent) * T0);
                     if (tempFitness < bestFitness)
                     {
                         bestSolution = currentSolution.DeepClone();

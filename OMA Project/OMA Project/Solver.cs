@@ -22,11 +22,11 @@ namespace OMA_Project
         /// 4. Utenti utilizzati
         /// 5. Task svolti
         /// </returns>
-        public static LinkedList<int[]> GreedySolution(Problem problem, Availabilities av)
+        public static LinkedList<int[]> GreedySolution(Problem problem)
         {
             int totCell = problem.Matrix.Cells;
             bool[] visited = new bool[totCell];
-            Random generator = new Random();
+            Random generator = new Random(1); //seed per eliminare casualità
             LinkedList<int[]> movings = new LinkedList<int[]>();
             for (int i = totCell; --i >= 0;)
             {
@@ -36,21 +36,21 @@ namespace OMA_Project
                     cell = generator.Next(0, totCell);
                 } while (visited[cell]);
                 visited[cell] = true;
-                SolveTasks(cell, problem.Tasks[cell], problem.Matrix, av, problem.TaskPerUser, movings);
+                SolveTasks(cell, problem.Tasks[cell], problem, movings);
             }
             return movings;
         }
 
-        private static void SolveTasks(int destination, int tasks, Costs costs, Availabilities av, int[] taskPerUser, LinkedList<int[]> movings)
+        private static void SolveTasks(int destination, int tasks, Problem problem, LinkedList<int[]> movings)
         {
             while (tasks != 0)
             {
-                int[] minimum = costs.GetMin(destination, taskPerUser, av);
-                int available = av.GetUserNumber(minimum[0], minimum[1], minimum[2]);
-                if (available * taskPerUser[minimum[2]] >= tasks)
+                int[] minimum = problem.Matrix.GetMin(destination, problem.TaskPerUser, problem.Availability);
+                int available = problem.Availability[minimum[0]][minimum[1]][minimum[2]];
+                if (available * problem.TaskPerUser[minimum[2]] >= tasks)
                 {
-                    int used = (int)Math.Ceiling(tasks / (double)taskPerUser[minimum[2]]);
-                    av.DecreaseUser(minimum[0], minimum[1], minimum[2], used);
+                    int used = (int)Math.Ceiling(tasks / (double)problem.TaskPerUser[minimum[2]]);
+                    problem.Availability[minimum[0]][minimum[1]][minimum[2]] -= used;
                     movings.AddFirst(new[] { minimum[0], destination, minimum[1], minimum[2], used, tasks });
                     tasks = 0;
                 }
@@ -58,9 +58,9 @@ namespace OMA_Project
                 {
                     if (available != 0)
                     {
-                        av.DecreaseUser(minimum[0], minimum[1], minimum[2], available);
-                        tasks = unchecked(tasks - (available * taskPerUser[minimum[2]]));
-                        movings.AddLast(new[] { minimum[0], destination, minimum[1], minimum[2], available, unchecked(available * taskPerUser[minimum[2]]) });
+                        problem.Availability[minimum[0]][minimum[1]][minimum[2]] -= available;
+                        tasks = unchecked(tasks - (available * problem.TaskPerUser[minimum[2]]));
+                        movings.AddLast(new[] { minimum[0], destination, minimum[1], minimum[2], available, unchecked(available * problem.TaskPerUser[minimum[2]]) });
                     }
                 }
             }
@@ -68,22 +68,16 @@ namespace OMA_Project
 
 
 
-        private static void GenerateNeighborhood(LinkedList<int[]> currentSolution, Problem problem, Availabilities newAvailabilities)
+        private static void GenerateNeighborhood(LinkedList<int[]> currentSolution, Problem problem)
         {
-            Random generator = new Random();
-            int randIndex = generator.Next(currentSolution.Count);
+            int randIndex = new Random().Next(currentSolution.Count);
             int[] randTuple = currentSolution.ElementAt(randIndex);
             currentSolution.Remove(randTuple);
-            int remainingUsers = newAvailabilities.GetUserNumber(randTuple[0], randTuple[2], randTuple[3]);
+            int remainingUsers = problem.Availability[randTuple[0]][randTuple[2]][randTuple[3]];
             int totalUsers = remainingUsers + randTuple[4];
-            if (totalUsers > problem.Availabilty.GetUserNumber(randTuple[0], randTuple[2], randTuple[3]))
-            {
-                var x = currentSolution.Where(s => s[0] == randTuple[0] && s[3] == randTuple[3]).ToList();
-                var y = problem.Availabilty.GetUserNumber(randTuple[0], randTuple[2], randTuple[3]);
-            }
-            newAvailabilities.DecreaseUser(randTuple[0], randTuple[2], randTuple[3], remainingUsers);
-            SolveTasks(randTuple[1], randTuple[5], problem.Matrix, newAvailabilities, problem.TaskPerUser, currentSolution);
-            newAvailabilities.IncreaseUser(randTuple[0], randTuple[2], randTuple[3], totalUsers);
+            problem.Availability[randTuple[0]][randTuple[2]][randTuple[3]] = 0;
+            SolveTasks(randTuple[1], randTuple[5], problem, currentSolution);
+            problem.Availability[randTuple[0]][randTuple[2]][randTuple[3]] += totalUsers;
             //Console.WriteLine("Rimanevano " + remainingUsers + "\nUsati " + randTuple[4] + "\nAggiungo " + totalUsers);
         }
 
@@ -92,13 +86,10 @@ namespace OMA_Project
             return solution.Sum(sol => (matrix.GetCost(sol[2], sol[3], sol[0], sol[1]) * sol[4]));
         }
 
-        public static int SimulatedAnnealing(ref LinkedList<int[]> currentSolution, Problem problem, Availabilities newAvailabilities, double temperature)
+        public static int SimulatedAnnealing(ref LinkedList<int[]> currentSolution, Problem problem, double temperature)
         {
             LinkedList<int[]> neighborSolution = currentSolution.DeepClone();
-            for (int i = 0; i < 5; i++)
-            {
-                GenerateNeighborhood(neighborSolution, problem, newAvailabilities);
-            }
+            GenerateNeighborhood(neighborSolution, problem);
 
             int currentFitness = ObjectiveFunction(currentSolution, problem.Matrix);
             int neighborFitness = ObjectiveFunction(neighborSolution, problem.Matrix);
@@ -109,10 +100,8 @@ namespace OMA_Project
                 return neighborFitness;
             }
 
-            double pHat =
-                Math.Exp((currentFitness - neighborFitness) / temperature);
-            Random r = new Random();
-            double p = r.NextDouble();
+            double pHat = Math.Exp((currentFitness - neighborFitness) / temperature);
+            double p = new Random().NextDouble();
             if (p < pHat)
             {
                 currentSolution = neighborSolution;

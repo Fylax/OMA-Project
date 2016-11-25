@@ -36,7 +36,7 @@
 
         public int GetCost(int timeSlot, int userType, int start, int destination) => costMatrix[destination][start][timeSlot][userType];
 
-        public int[] GetMin(int destination, int[] taskPerUser, Availabilities availableUsers)
+        public int[] GetMin(int destination, int[] taskPerUser, int[][][] availableUsers)
         {
             int minValue = int.MaxValue;
             int minUser = 0;
@@ -64,7 +64,7 @@
                                 costMatrix[destination][start][timeSlot][userType] * maxTasks /
                                                taskPerUser[userType]
                             );
-                            if (minValue > weightedCost && availableUsers.HasUsers(start, timeSlot, userType))
+                            if (minValue > weightedCost && availableUsers[start][timeSlot][userType] != 0)
                             {
                                 minValue = weightedCost;
                                 minStart = start;
