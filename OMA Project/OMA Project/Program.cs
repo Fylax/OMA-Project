@@ -16,11 +16,12 @@ namespace OMA_Project
             using (Timer r = new Timer(4850))
             {
                 Stopwatch s = Stopwatch.StartNew();
+                Solver solver = new Solver(x);
                 r.Elapsed += Callback;
                 r.Enabled = true;
-                LinkedList<int[]> currentSolution = Solver.GreedySolution(x);
+                LinkedList<int[]> currentSolution = solver.GreedySolution();
                 LinkedList<int[]> bestSolution = currentSolution.DeepClone();
-                int bestFitness = Solver.ObjectiveFunction(currentSolution, x.Matrix);
+                int bestFitness = solver.ObjectiveFunction(currentSolution);
 
                 int iterations = 0;
                 int exponent = 0;
@@ -31,7 +32,7 @@ namespace OMA_Project
                 while (r.Enabled)
                 {
                     counter++;
-                    int tempFitness = Solver.SimulatedAnnealing(ref currentSolution, x, Math.Pow(alpha, exponent) * T0);
+                    int tempFitness = solver.SimulatedAnnealing(ref currentSolution, Math.Pow(alpha, exponent) * T0);
                     if (tempFitness < bestFitness)
                     {
                         bestSolution = currentSolution.DeepClone();

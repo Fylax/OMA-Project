@@ -6,8 +6,14 @@ using OMA_Project.Extensions;
 
 namespace OMA_Project
 {
-    public static class Solver
+    public class Solver
     {
+        private readonly Problem problem;
+
+        public Solver(Problem prob)
+        {
+            problem = prob;
+        }
         /// <summary>
         /// 
         /// </summary>
@@ -22,7 +28,7 @@ namespace OMA_Project
         /// 4. Utenti utilizzati
         /// 5. Task svolti
         /// </returns>
-        public static LinkedList<int[]> GreedySolution(Problem problem)
+        public LinkedList<int[]> GreedySolution()
         {
             int totCell = problem.Matrix.Cells;
             bool[] visited = new bool[totCell];
@@ -36,12 +42,12 @@ namespace OMA_Project
                     cell = generator.Next(0, totCell);
                 } while (visited[cell]);
                 visited[cell] = true;
-                SolveTasks(cell, problem.Tasks[cell], problem, movings);
+                SolveTasks(cell, problem.Tasks[cell], movings);
             }
             return movings;
         }
 
-        private static void SolveTasks(int destination, int tasks, Problem problem, LinkedList<int[]> movings)
+        private void SolveTasks(int destination, int tasks, LinkedList<int[]> movings)
         {
             while (tasks != 0)
             {
@@ -66,9 +72,7 @@ namespace OMA_Project
             }
         }
 
-
-
-        private static void GenerateNeighborhood(LinkedList<int[]> currentSolution, Problem problem)
+        private void GenerateNeighborhood(LinkedList<int[]> currentSolution)
         {
             int randIndex = new Random().Next(currentSolution.Count);
             int[] randTuple = currentSolution.ElementAt(randIndex);
@@ -76,23 +80,23 @@ namespace OMA_Project
             int remainingUsers = problem.Availability[randTuple[0]][randTuple[2]][randTuple[3]];
             int totalUsers = remainingUsers + randTuple[4];
             problem.Availability[randTuple[0]][randTuple[2]][randTuple[3]] = 0;
-            SolveTasks(randTuple[1], randTuple[5], problem, currentSolution);
+            SolveTasks(randTuple[1], randTuple[5], currentSolution);
             problem.Availability[randTuple[0]][randTuple[2]][randTuple[3]] += totalUsers;
             //Console.WriteLine("Rimanevano " + remainingUsers + "\nUsati " + randTuple[4] + "\nAggiungo " + totalUsers);
         }
 
-        public static int ObjectiveFunction(IEnumerable<int[]> solution, Costs matrix)
+        public int ObjectiveFunction(IEnumerable<int[]> solution)
         {
-            return solution.Sum(sol => (matrix.GetCost(sol[2], sol[3], sol[0], sol[1]) * sol[4]));
+            return solution.Sum(sol => (problem.Matrix.GetCost(sol[2], sol[3], sol[0], sol[1]) * sol[4]));
         }
 
-        public static int SimulatedAnnealing(ref LinkedList<int[]> currentSolution, Problem problem, double temperature)
+        public int SimulatedAnnealing(ref LinkedList<int[]> currentSolution, double temperature)
         {
             LinkedList<int[]> neighborSolution = currentSolution.DeepClone();
-            GenerateNeighborhood(neighborSolution, problem);
+            GenerateNeighborhood(neighborSolution);
 
-            int currentFitness = ObjectiveFunction(currentSolution, problem.Matrix);
-            int neighborFitness = ObjectiveFunction(neighborSolution, problem.Matrix);
+            int currentFitness = ObjectiveFunction(currentSolution);
+            int neighborFitness = ObjectiveFunction(neighborSolution);
 
             if (neighborFitness < currentFitness)
             {
