@@ -7,7 +7,9 @@ namespace OMA_Project
         /// <summary>
         /// Lista di tutti gli spostamenti facenti parte la soluzione
         /// </summary>
-        private List<int[]> Movings { get; }
+        public List<int[]> Movings { get; }
+
+        public int Count => Movings.Count;
 
         /// <summary>
         /// Numero della cella per la quale ci sono più spostamenti
@@ -54,7 +56,7 @@ namespace OMA_Project
             Movings.Add(moving);
             index[moving[1]].Add(Movings.Count - 1);
             movingsPerDestination[moving[1]]++;
-            if (movingsPerDestination[moving[1]] >= maxMovingsDestination)
+            if (maxMovingsDestination == -1 || movingsPerDestination[moving[1]] > movingsPerDestination[maxMovingsDestination])
             {
                 maxMovingsDestination = moving[1];
             }
@@ -119,7 +121,7 @@ namespace OMA_Project
         /// </returns>
         public int[][] MovementsMaxDestination()
         {
-            int total = index[maxMovingsDestination].Count - 1;
+            int total = index[maxMovingsDestination].Count;
             int[][] returns = new int[total][];
             using (HashSet<int>.Enumerator enumerator = index[maxMovingsDestination].GetEnumerator())
             {
@@ -130,6 +132,11 @@ namespace OMA_Project
                 }
             }
             return returns;
+        }
+
+        public void RemoveMax()
+        {
+            Movings.RemoveAll(s => s[1] == maxMovingsDestination);
         }
 
         public Solution Clone()

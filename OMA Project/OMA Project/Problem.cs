@@ -19,7 +19,7 @@ namespace OMA_Project
             get;
             private set;
         }
-
+        
         /// <summary>
         /// Lista con il numero di task per ogni cella
         /// </summary>

@@ -26,23 +26,24 @@ namespace OMA_Project
                 Solver solver = new Solver(x);
                 r.Elapsed += Callback;
                 r.Enabled = true;
-                LinkedList<int[]> currentSolution = solver.GreedySolution();
-                LinkedList<int[]> bestSolution = currentSolution.DeepClone();
+                Solution currentSolution = solver.GreedySolution();
+                Solution bestSolution = currentSolution.Clone();
                 int bestFitness = solver.ObjectiveFunction(currentSolution);
+                int tempFitness;
 
                 int iterations = 0;
                 int exponent = 0;
-                const int plateauLength = 15;
+                const int plateauLength = 13;
                 const double alpha = 0.8;
-                const int T0 = 500;
+                const int T0 = 1500;
                 ulong counter = 0;
                 while (r.Enabled)
                 {
                     counter++;
-                    int tempFitness = solver.SimulatedAnnealing(ref currentSolution, Math.Pow(alpha, exponent) * T0);
+                    tempFitness = solver.SimulatedAnnealing(ref currentSolution, Math.Pow(alpha, exponent) * T0);
                     if (tempFitness < bestFitness)
                     {
-                        bestSolution = currentSolution.DeepClone();
+                        bestSolution = currentSolution.Clone();
                         bestFitness = tempFitness;
                     }
                     if (++iterations % plateauLength == 0)
@@ -53,7 +54,7 @@ namespace OMA_Project
                 }
                 s.Stop();
 
-                WriteSolution.Write(args[1], bestSolution, bestFitness, s.ElapsedMilliseconds, args[0]);
+                //WriteSolution.Write(args[1], bestSolution, bestFitness, s.ElapsedMilliseconds, args[0]);
             }
         }
 

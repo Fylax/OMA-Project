@@ -13,26 +13,13 @@ namespace OMA_Project
         {
             problem = prob;
         }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="problem"></param>
-        /// <param name="av"></param>
-        /// <returns>
-        /// Array di (in ordine):
-        /// 0. Cella di partenza
-        /// 1. Cella di arrivo
-        /// 2. Time Slot
-        /// 3. Tipo utente
-        /// 4. Utenti utilizzati
-        /// 5. Task svolti
-        /// </returns>
-        public LinkedList<int[]> GreedySolution()
+
+        public Solution GreedySolution()
         {
             int totCell = problem.Matrix.Cells;
             bool[] visited = new bool[totCell];
-            Random generator = new Random(1); //seed per eliminare casualità
-            LinkedList<int[]> movings = new LinkedList<int[]>();
+            Random generator = new Random();
+            Solution solution = new Solution(totCell);
             for (int i = totCell; --i >= 0;)
             {
                 int cell;
@@ -41,12 +28,12 @@ namespace OMA_Project
                     cell = generator.Next(0, totCell);
                 } while (visited[cell]);
                 visited[cell] = true;
-                SolveTasks(cell, problem.Tasks[cell], movings);
+                SolveTasks(cell, problem.Tasks[cell], solution);
             }
-            return movings;
+            return solution;
         }
 
-        private void SolveTasks(int destination, int tasks, LinkedList<int[]> movings)
+        private void SolveTasks(int destination, int tasks, Solution movings)
         {
             while (tasks != 0)
             {
@@ -56,41 +43,64 @@ namespace OMA_Project
                 {
                     int used = (int)Math.Ceiling(tasks / (double)problem.TaskPerUser[minimum[2]]);
                     problem.Availability[minimum[0]][minimum[1]][minimum[2]] -= used;
-                    movings.AddFirst(new[] { minimum[0], destination, minimum[1], minimum[2], used, tasks });
+                    movings.Add(new[] { minimum[0], destination, minimum[1], minimum[2], used, tasks });
                     tasks = 0;
                 }
                 else
                 {
                     problem.Availability[minimum[0]][minimum[1]][minimum[2]] -= available;
                     tasks = unchecked(tasks - (available * problem.TaskPerUser[minimum[2]]));
-                    movings.AddLast(new[] { minimum[0], destination, minimum[1], minimum[2], available, unchecked(available * problem.TaskPerUser[minimum[2]]) });
+                    movings.Add(new[] { minimum[0], destination, minimum[1], minimum[2], available, unchecked(available * problem.TaskPerUser[minimum[2]]) });
                 }
             }
         }
 
-        private void GenerateNeighborhood(LinkedList<int[]> currentSolution)
+        private void GenerateNeighborhood(Solution currentSolution)
         {
-            lock (problem.Availability)
+            int[][] max = currentSolution.MovementsMaxDestination();
+            currentSolution.RemoveMax();
+            int[][][] toBeRestored = new int[problem.Matrix.Cells][][];
+            int timeSlots = problem.Availability[0].Length;
+            int userTypes = problem.TaskPerUser.Length;
+            for (int i = toBeRestored.Length; i-- > 0;)
             {
-                int randIndex = new Random().Next(currentSolution.Count);
-                int[] randTuple = currentSolution.ElementAt(randIndex);
-                currentSolution.Remove(randTuple);
-                int remainingUsers = problem.Availability[randTuple[0]][randTuple[2]][randTuple[3]];
-                int totalUsers = remainingUsers + randTuple[4];
-                problem.Availability[randTuple[0]][randTuple[2]][randTuple[3]] = 0;
-                SolveTasks(randTuple[1], randTuple[5], currentSolution);
-                problem.Availability[randTuple[0]][randTuple[2]][randTuple[3]] += totalUsers;
+                toBeRestored[i] = new int[timeSlots][];
+                for (int j = timeSlots; j-- > 0;)
+                {
+                    toBeRestored[i][j] = new int[userTypes];
+                }
+            }
+            for (int i = max.Length; i-- > 0;)
+            {
+                int destination = max[i][0];
+                int timeSlot = max[i][2];
+                int userType = max[i][3];
+                toBeRestored[destination][timeSlot][userType] = unchecked(
+                    toBeRestored[destination][timeSlot][userType] + problem.Availability[destination][timeSlot][userType]);
+                problem.Availability[destination][timeSlot][timeSlot] = 0;
+            }
+            SolveTasks(max[0][1], problem.Tasks[max[0][1]], currentSolution);
+            for (int i = max.Length; i-- > 0;)
+            {
+                int destination = max[i][0];
+                int timeSlot = max[i][2];
+                int userType = max[i][3];
+                problem.Availability[destination][timeSlot][userType] = toBeRestored[destination][timeSlot][userType];
             }
         }
 
-        public int ObjectiveFunction(IEnumerable<int[]> solution)
+        public int ObjectiveFunction(Solution solution)
         {
-            return solution.Sum(sol => (problem.Matrix.GetCost(sol[2], sol[3], sol[0], sol[1]) * sol[4]));
+            int sum = 0;
+            for (int i = solution.Count; i-- > 0;)
+                sum = unchecked(sum + problem.Matrix.GetCost(solution.Movings[i][2], solution.Movings[i][3],
+                    solution.Movings[i][0], solution.Movings[i][1]) * solution.Movings[i][4]);
+            return sum;
         }
 
-        public int SimulatedAnnealing(ref LinkedList<int[]> currentSolution, double temperature)
+        public int SimulatedAnnealing(ref Solution currentSolution, double temperature)
         {
-            LinkedList<int[]> neighborSolution = currentSolution.DeepClone();
+            Solution neighborSolution = currentSolution.Clone();
             int[][][] availabilities = problem.Availability.DeepClone();
             GenerateNeighborhood(neighborSolution);
 
