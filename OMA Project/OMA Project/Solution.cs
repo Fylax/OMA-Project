@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace OMA_Project
 {
@@ -106,6 +107,31 @@ namespace OMA_Project
         /// </returns>
         public int[] ElementAt(int position) => Movings[position];
 
+        public int[][] MovingsToRandomCell()
+        {
+            Random generator = new Random();
+            int cell;
+            do
+            {
+                cell = generator.Next(index.Length);
+            } while (index[cell].Count == 0);
+            int[][] returns = new int[index[cell].Count][];
+            using (HashSet<int>.Enumerator enumerator = index[cell].GetEnumerator())
+            {
+                for (int i = index[cell].Count; i-- > 0;)
+                {
+                    enumerator.MoveNext();
+                    returns[i] = Movings[enumerator.Current];
+                }
+            }
+            return returns;
+        }
+
+        public void RemoveCell(int cell)
+        {
+            Movings.RemoveAll(s => s[1] == cell);
+        }
+
         /// <summary>
         /// Ottiene la lista degli spostamenti per la cella col maggior numero
         /// di spostamenti entranti
@@ -136,7 +162,7 @@ namespace OMA_Project
 
         public void RemoveMax()
         {
-            Movings.RemoveAll(s => s[1] == maxMovingsDestination);
+            RemoveCell(maxMovingsDestination);
         }
 
         public Solution Clone()

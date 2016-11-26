@@ -16,19 +16,13 @@ namespace OMA_Project
 
         public Solution GreedySolution()
         {
-            int totCell = problem.Matrix.Cells;
-            bool[] visited = new bool[totCell];
-            Random generator = new Random();
-            Solution solution = new Solution(totCell);
-            for (int i = totCell; --i >= 0;)
+            Solution solution = new Solution(problem.Matrix.Cells);
+            var newTask = (int[]) problem.Tasks.Clone();
+            var orderedTask = newTask.Select((t, c) => new {cell = c, task = t})
+                .Where(t => t.task != 0).OrderBy(t => t.task).ToArray();
+            for (int i = orderedTask.Length; i-- > 0;)
             {
-                int cell;
-                do
-                {
-                    cell = generator.Next(0, totCell);
-                } while (visited[cell]);
-                visited[cell] = true;
-                SolveTasks(cell, problem.Tasks[cell], solution);
+                SolveTasks(orderedTask[i].cell, orderedTask[i].task, solution);
             }
             return solution;
         }
@@ -57,8 +51,8 @@ namespace OMA_Project
 
         private void GenerateNeighborhood(Solution currentSolution)
         {
-            int[][] max = currentSolution.MovementsMaxDestination();
-            currentSolution.RemoveMax();
+            int[][] max = currentSolution.MovingsToRandomCell();
+            currentSolution.RemoveCell(max[0][1]);
             int[][][] toBeRestored = new int[problem.Matrix.Cells][][];
             int timeSlots = problem.Availability[0].Length;
             int userTypes = problem.TaskPerUser.Length;
@@ -72,20 +66,20 @@ namespace OMA_Project
             }
             for (int i = max.Length; i-- > 0;)
             {
-                int destination = max[i][0];
+                int source = max[i][0];
                 int timeSlot = max[i][2];
                 int userType = max[i][3];
-                toBeRestored[destination][timeSlot][userType] = unchecked(
-                    toBeRestored[destination][timeSlot][userType] + problem.Availability[destination][timeSlot][userType]);
-                problem.Availability[destination][timeSlot][timeSlot] = 0;
+                toBeRestored[source][timeSlot][userType] = unchecked(
+                    toBeRestored[source][timeSlot][userType] + problem.Availability[source][timeSlot][userType]);
+                problem.Availability[source][timeSlot][timeSlot] = 0;
             }
             SolveTasks(max[0][1], problem.Tasks[max[0][1]], currentSolution);
             for (int i = max.Length; i-- > 0;)
             {
-                int destination = max[i][0];
+                int source = max[i][0];
                 int timeSlot = max[i][2];
                 int userType = max[i][3];
-                problem.Availability[destination][timeSlot][userType] = toBeRestored[destination][timeSlot][userType];
+                problem.Availability[source][timeSlot][userType] = toBeRestored[source][timeSlot][userType];
             }
         }
 

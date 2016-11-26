@@ -77,7 +77,7 @@ namespace OMA_Project
 
                 // Reads and stores matrix of Matrix
                 int iterations = unchecked(userTypes * timings);
-                prob.Matrix = new Costs(cells, timings, userTypes);
+                prob.Matrix = new Costs(cells, timings, userTypes, prob.TaskPerUser);
                 file.ReadLine();
                 for (int i = 0; i < iterations; ++i)
                 {

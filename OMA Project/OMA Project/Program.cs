@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Timers;
-using OMA_Project.Extensions;
 using System;
 using System.Runtime;
 using System.Runtime.CompilerServices;
@@ -33,9 +32,9 @@ namespace OMA_Project
 
                 int iterations = 0;
                 int exponent = 0;
-                const int plateauLength = 13;
-                const double alpha = 0.8;
-                const int T0 = 1500;
+                const int plateauLength = 6;
+                const double alpha = 0.55;
+                const int T0 = 5000;
                 ulong counter = 0;
                 while (r.Enabled)
                 {
