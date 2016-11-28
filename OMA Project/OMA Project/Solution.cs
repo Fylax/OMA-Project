@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace OMA_Project
 {
@@ -22,21 +21,28 @@ namespace OMA_Project
         /// </summary>
         private readonly int[] movingsPerDestination;
 
+        public int[] MovingsFromSource { get; }
+
         /// <summary>
         /// Indice di lookup con in cui per ogni cella di destinazione
         /// sono indicati gli indici dei vari spostamenti
         /// </summary>
-        private readonly HashSet<int>[] index;
+        private readonly HashSet<int>[] destinationLookup;
+
+        private readonly HashSet<int>[] sourceLookup;
 
         public Solution(int numCell)
         {
             Movings = new List<int[]>();
             maxMovingsDestination = -1;
-            index = new HashSet<int>[numCell];
+            destinationLookup = new HashSet<int>[numCell];
+            sourceLookup = new HashSet<int>[numCell];
             movingsPerDestination = new int[numCell];
+            MovingsFromSource = new int[numCell];
             for (int i = numCell; i-- > 0;)
             {
-                index[i] = new HashSet<int>();
+                destinationLookup[i] = new HashSet<int>();
+                sourceLookup[i] = new HashSet<int>();
             }
         }
 
@@ -55,8 +61,10 @@ namespace OMA_Project
         public void Add(int[] moving)
         {
             Movings.Add(moving);
-            index[moving[1]].Add(Movings.Count - 1);
+            destinationLookup[moving[1]].Add(Movings.Count - 1);
+            sourceLookup[moving[0]].Add(Movings.Count - 1);
             movingsPerDestination[moving[1]]++;
+            MovingsFromSource[moving[0]]++;
             if (maxMovingsDestination == -1 || movingsPerDestination[moving[1]] > movingsPerDestination[maxMovingsDestination])
             {
                 maxMovingsDestination = moving[1];
@@ -77,12 +85,15 @@ namespace OMA_Project
         /// </param>
         public void Remove(int[] moving)
         {
-            index[moving[1]].Remove(Movings.IndexOf(moving));
+            int moveIndex = Movings.IndexOf(moving);
+            destinationLookup[moving[1]].Remove(moveIndex);
+            sourceLookup[moving[0]].Remove(moveIndex);
             movingsPerDestination[moving[1]]--;
+            MovingsFromSource[moving[0]]--;
             Movings.Remove(moving);
             if (maxMovingsDestination == moving[1])
             {
-                for (int i = index.Length; i-- > 0;)
+                for (int i = destinationLookup.Length; i-- > 0;)
                 {
                     if (movingsPerDestination[i] > maxMovingsDestination)
                     {
@@ -107,18 +118,12 @@ namespace OMA_Project
         /// </returns>
         public int[] ElementAt(int position) => Movings[position];
 
-        public int[][] MovingsToRandomCell()
+        public int[][] MovingsFromCell(int cell)
         {
-            Random generator = new Random();
-            int cell;
-            do
+            int[][] returns = new int[MovingsFromSource[cell]][];
+            using (HashSet<int>.Enumerator enumerator = sourceLookup[cell].GetEnumerator())
             {
-                cell = generator.Next(index.Length);
-            } while (index[cell].Count == 0);
-            int[][] returns = new int[index[cell].Count][];
-            using (HashSet<int>.Enumerator enumerator = index[cell].GetEnumerator())
-            {
-                for (int i = index[cell].Count; i-- > 0;)
+                for (int i = MovingsFromSource[cell]; i-- > 0;)
                 {
                     enumerator.MoveNext();
                     returns[i] = Movings[enumerator.Current];
@@ -127,9 +132,28 @@ namespace OMA_Project
             return returns;
         }
 
-        public void RemoveCell(int cell)
+        private int[][] MovingsToCell(int cell)
         {
-            Movings.RemoveAll(s => s[1] == cell);
+            int[][] returns = new int[movingsPerDestination[cell]][];
+            using (HashSet<int>.Enumerator enumerator = destinationLookup[cell].GetEnumerator())
+            {
+                for (int i = movingsPerDestination[cell]; i-- > 0;)
+                {
+                    enumerator.MoveNext();
+                    returns[i] = Movings[enumerator.Current];
+                }
+            }
+            return returns;
+        }
+
+        public int[][] MovingsToRandomCell()
+        {
+            int cell;
+            do
+            {
+                cell = Program.generator.Next(destinationLookup.Length);
+            } while (destinationLookup[cell].Count == 0);
+            return MovingsToCell(cell);
         }
 
         /// <summary>
@@ -145,19 +169,11 @@ namespace OMA_Project
         /// 4. Numero utenti coinvolti<para />
         /// 5. Task svolti
         /// </returns>
-        public int[][] MovementsMaxDestination()
+        public int[][] MovementsMaxDestination() => MovingsToCell(maxMovingsDestination);
+
+        public void RemoveCell(int cell)
         {
-            int total = index[maxMovingsDestination].Count;
-            int[][] returns = new int[total][];
-            using (HashSet<int>.Enumerator enumerator = index[maxMovingsDestination].GetEnumerator())
-            {
-                for (int i = total; i-- > 0;)
-                {
-                    enumerator.MoveNext();
-                    returns[i] = Movings[enumerator.Current];
-                }
-            }
-            return returns;
+            Movings.RemoveAll(tuple => tuple[1] == cell);
         }
 
         public void RemoveMax()
@@ -167,7 +183,7 @@ namespace OMA_Project
 
         public Solution Clone()
         {
-            Solution solution = new Solution(index.Length);
+            Solution solution = new Solution(destinationLookup.Length);
             for (int i = Movings.Count; i-- > 0;)
             {
                 solution.Add(Movings[i]);

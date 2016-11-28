@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Timers;
 using System;
 using System.Runtime;
@@ -9,7 +8,7 @@ namespace OMA_Project
 {
     internal static class Program
     {
-        public static List<int> totalUsers = new List<int>();
+        public static Random generator = new Random();
         public static void Main(string[] args)
         {
             Problem x = Problem.ReadFromFile(@"C:\Users\Fylax\Desktop\Material_assignment\input\Co_30_1_NT_0.txt");
@@ -33,14 +32,14 @@ namespace OMA_Project
                 int iterations = 0;
                 int exponent = 0;
                 const int plateauLength = 6;
-                const double alpha = 0.55;
+                const double alpha = 0.6;
                 const int T0 = 5000;
                 ulong counter = 0;
                 while (r.Enabled)
                 {
                     counter++;
                     tempFitness = solver.SimulatedAnnealing(ref currentSolution, Math.Pow(alpha, exponent) * T0);
-                    if (tempFitness < bestFitness)
+                    if (tempFitness <= bestFitness)
                     {
                         bestSolution = currentSolution.Clone();
                         bestFitness = tempFitness;
