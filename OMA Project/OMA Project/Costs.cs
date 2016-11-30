@@ -2,12 +2,11 @@
 {
     public class Costs
     {
-        private readonly int maxTasks;
         private readonly int[][][][] costMatrix;
 
         public int Cells => costMatrix.Length;
 
-        public Costs(int numCells, int timeSlots, int userTypes, int[] taskPerUser)
+        public Costs(int numCells, int timeSlots, int userTypes)
         {
             costMatrix = new int[numCells][][][];
             for (int i = 0; i < numCells; ++i)
@@ -20,14 +19,6 @@
                     {
                         costMatrix[i][j][k] = new int[userTypes];
                     }
-                }
-            }
-            maxTasks = 0;
-            for (int i = taskPerUser.Length; i-- > 0;)
-            {
-                if (maxTasks < taskPerUser[i])
-                {
-                    maxTasks = taskPerUser[i];
                 }
             }
         }
@@ -45,10 +36,9 @@
 
         public int GetCost(int timeSlot, int userType, int start, int destination) => costMatrix[destination][start][timeSlot][userType];
 
-        public int[] GetMin(int destination, int[] taskPerUser, int[][][] availableUsers)
+        public int[] GetMin(int destination, int[][][] availableUsers, int userType)
         {
-            double minValue = double.MaxValue;
-            int minUser = 0;
+            int minValue = int.MaxValue;
             int minTime = 0;
             int minStart = 0;
             for (int start = costMatrix[0].Length; start-- > 0;)
@@ -57,26 +47,17 @@
                 {
                     for (int timeSlot = costMatrix[0][0].Length; timeSlot-- > 0;)
                     {
-                        for (int userType = costMatrix[0][0][0].Length;
-                            userType-- > 0;)
+                        int cost = costMatrix[destination][start][timeSlot][userType];
+                        if (minValue > cost && availableUsers[start][timeSlot][userType] != 0)
                         {
-
-                            double weightedCost = unchecked(
-                                costMatrix[destination][start][timeSlot][userType] * maxTasks /
-                                               (double)taskPerUser[userType]
-                            );
-                            if (minValue > weightedCost && availableUsers[start][timeSlot][userType] != 0)
-                            {
-                                minValue = weightedCost;
-                                minStart = start;
-                                minTime = timeSlot;
-                                minUser = userType;
-                            }
+                            minValue = cost;
+                            minStart = start;
+                            minTime = timeSlot;
                         }
                     }
                 }
             }
-            return new[] { minStart, minTime, minUser };
+            return new[] { minStart, minTime };
         }
     }
 }

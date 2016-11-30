@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using OMA_Project.Extensions;
 
 namespace OMA_Project
 {
@@ -189,6 +190,42 @@ namespace OMA_Project
                 solution.Add(Movings[i]);
             }
             return solution;
+        }
+
+        public bool isFeasible(Problem x)
+        {
+            int[] tasks = (int[])x.Tasks.Clone();
+            int[][][] availabilities = x.immutableAvailability.DeepClone();
+
+            for (int i = Movings.Count; i-- > 0;)
+            {
+                if (Movings[i][0] == Movings[i][1])
+                    return false;
+
+                tasks[Movings[i][1]] -= Movings[i][5];
+                availabilities[Movings[i][0]][Movings[i][2]][Movings[i][3]] -= Movings[i][4];
+            }
+
+            for (int i = tasks.Length; i-- > 0;)
+            {
+                if (tasks[i] != 0)
+                    return false;
+            }
+
+            for (int i = availabilities.Length; i-- > 0;)
+            {
+                for (int j = availabilities[0].Length; j-- > 0;)
+                {
+                    for (int k = availabilities[0][0].Length; k-- > 0;)
+                    {
+                        if (availabilities[i][j][k] < 0)
+                        {
+                            return false;
+                        } 
+                    }
+                }
+            }
+            return true;
         }
     }
 }

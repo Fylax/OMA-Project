@@ -26,29 +26,15 @@ namespace OMA_Project
                 r.Enabled = true;
                 Solution currentSolution = solver.GreedySolution();
                 Solution bestSolution = currentSolution.Clone();
+                bool feasible = bestSolution.isFeasible(x);
                 int bestFitness = solver.ObjectiveFunction(currentSolution);
                 int tempFitness;
 
-                int iterations = 0;
-                int exponent = 0;
-                const int plateauLength = 6;
-                const double alpha = 0.6;
-                const int T0 = 5000;
                 ulong counter = 0;
                 while (r.Enabled)
                 {
                     counter++;
-                    tempFitness = solver.SimulatedAnnealing(ref currentSolution, Math.Pow(alpha, exponent) * T0);
-                    if (tempFitness <= bestFitness)
-                    {
-                        bestSolution = currentSolution.Clone();
-                        bestFitness = tempFitness;
-                    }
-                    if (++iterations % plateauLength == 0)
-                    {
-                        ++exponent;
-                        iterations = 0;
-                    }
+                    
                 }
                 s.Stop();
 

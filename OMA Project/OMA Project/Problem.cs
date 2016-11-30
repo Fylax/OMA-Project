@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using OMA_Project.Extensions;
 
 // ReSharper disable PossibleNullReferenceException
@@ -31,7 +32,7 @@ namespace OMA_Project
         /// <summary>
         /// Numero di task che ogni tipo di utente può eseguire.
         /// </summary>
-        public int[] TaskPerUser
+        public TaskPerUser[] TasksPerUser
         {
             get; private set;
         }
@@ -73,11 +74,18 @@ namespace OMA_Project
                 // Read third row (# Tasks per user)
                 file.ReadLine();
                 line = file.ReadLine();
-                prob.TaskPerUser = Array.ConvertAll(line.Trim().Split(' '), int.Parse);
+                int[] tasksPerUser = Array.ConvertAll(line.Trim().Split(' '), int.Parse);
+                var orderedTaskPerUser = tasksPerUser.Select((t, u) => new {task = t, user = u})
+                    .OrderByDescending(t => t.task).ToList();
+                prob.TasksPerUser = new TaskPerUser[tasksPerUser.Length];
+                for (int i = 0; i < orderedTaskPerUser.Count; ++i)
+                {
+                    prob.TasksPerUser[i] = new TaskPerUser(orderedTaskPerUser[i].user, orderedTaskPerUser[i].task);
+                }
 
                 // Reads and stores matrix of Matrix
                 int iterations = unchecked(userTypes * timings);
-                prob.Matrix = new Costs(cells, timings, userTypes, prob.TaskPerUser);
+                prob.Matrix = new Costs(cells, timings, userTypes);
                 file.ReadLine();
                 for (int i = 0; i < iterations; ++i)
                 {
