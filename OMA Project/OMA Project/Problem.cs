@@ -76,7 +76,7 @@ namespace OMA_Project
                 line = file.ReadLine();
                 int[] tasksPerUser = Array.ConvertAll(line.Trim().Split(' '), int.Parse);
                 var orderedTaskPerUser = tasksPerUser.Select((t, u) => new {task = t, user = u})
-                    .OrderByDescending(t => t.task).ToList();
+                    .OrderBy (t => t.task).ToList();
                 prob.TasksPerUser = new TaskPerUser[tasksPerUser.Length];
                 for (int i = 0; i < orderedTaskPerUser.Count; ++i)
                 {

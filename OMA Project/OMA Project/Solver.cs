@@ -36,24 +36,24 @@ namespace OMA_Project
                 {
                     int[] minimum = problem.Matrix.GetMin(destination, problem.Availability, i);
                     int available = problem.Availability[minimum[0]][minimum[1]][i];
-                    if (available * problem.TasksPerUser[i].Tasks >= tasks)
+                    if (available >= partitioned[i])
                     {
-                        int used = (int)Math.Ceiling(tasks / (double)problem.TasksPerUser[i].Tasks);
+                        int used = partitioned[i];
                         problem.Availability[minimum[0]][minimum[1]][i] -= used;
                         movings.Add(new[]
                         {
-                            minimum[0], destination, minimum[1], i, used, partitioned[i]
+                            minimum[0], destination, minimum[1], i, used
                         });
                         partitioned[i] = 0;
                     }
                     else
                     {
+                        partitioned[i] -= available;
                         problem.Availability[minimum[0]][minimum[1]][i] -= available;
                         tasks = unchecked(tasks - (available * problem.TasksPerUser[i].Tasks));
                         movings.Add(new[]
                         {
                             minimum[0], destination, minimum[1], i, available,
-                            available*problem.TasksPerUser[i].Tasks
                         });
                     }
                 }
@@ -108,8 +108,12 @@ namespace OMA_Project
         {
             int sum = 0;
             for (int i = solution.Count; i-- > 0;)
-                sum = unchecked(sum + problem.Matrix.GetCost(solution.Movings[i][2], solution.Movings[i][3],
-                    solution.Movings[i][0], solution.Movings[i][1]) * solution.Movings[i][4]);
+            {
+                int costo = problem.Matrix.GetCost(solution.Movings[i][2], solution.Movings[i][3],
+                    solution.Movings[i][0], solution.Movings[i][1]);
+                costo = costo * (solution.Movings[i][4]);
+            sum += costo;
+            }
             return sum;
         }
 
@@ -131,8 +135,8 @@ namespace OMA_Project
                 }
                 if (!isDivisible)
                 {
-                    value -= problem.TasksPerUser[0].Tasks;
-                    ++returns[0];
+                    value -= problem.TasksPerUser[2].Tasks;
+                    ++returns[2];
                 }
             }
             if (value != 0)
