@@ -47,7 +47,23 @@ namespace OMA_Project
         public int[][][] Availability
         {
             get;
-            set;
+            private set;
+        }
+
+        public int[] TotalUsers()
+        {
+            int[] users = new int[TasksPerUser.Length];
+            for (int i = Availability.Length; i-- > 0;)
+            {
+                for (int j = Availability[0].Length; j-- > 0;)
+                {
+                    for (int k = Availability[0][0].Length; k-- > 0;)
+                    {
+                        users[k] += Availability[i][j][k];
+                    }
+                }
+            }
+            return users;
         }
 
         public int[][][] immutableAvailability;

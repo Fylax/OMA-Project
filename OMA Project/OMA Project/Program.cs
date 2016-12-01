@@ -11,7 +11,7 @@ namespace OMA_Project
         public static Random generator = new Random();
         public static void Main(string[] args)
         {
-            Problem x = Problem.ReadFromFile(@"C:\Users\Vincenzo\Documents\Università\LAUREA MAGISTRALE\Optimization Methods and algorithms\Assignment\hardinstances\Co_30_1_ST_0.txt");
+            Problem x = Problem.ReadFromFile(@"C:\Users\Fylax\Desktop\Material_assignment\input\Co_30_1_ST_0.txt");
 
             GC.Collect();
             RuntimeHelpers.PrepareConstrainedRegions();
@@ -26,7 +26,7 @@ namespace OMA_Project
                 r.Enabled = true;
                 Solution currentSolution = solver.GreedySolution();
                 Solution bestSolution = currentSolution.Clone();
-                //bool feasible = bestSolution.isFeasible(x);
+                bool feasible = bestSolution.isFeasible(x);
                 int bestFitness = solver.ObjectiveFunction(currentSolution);
                 int tempFitness;
 

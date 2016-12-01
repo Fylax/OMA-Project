@@ -38,22 +38,28 @@ namespace OMA_Project
                     int available = problem.Availability[minimum[0]][minimum[1]][i];
                     if (available >= partitioned[i])
                     {
-                        int used = partitioned[i];
-                        problem.Availability[minimum[0]][minimum[1]][i] -= used;
+                        int doneTasks = (tasks < problem.TasksPerUser[i].Tasks * partitioned[i])
+                            ? tasks
+                            : partitioned[i] * problem.TasksPerUser[i].Tasks;
+                        tasks -= partitioned[i] * problem.TasksPerUser[i].Tasks;
+                        problem.Availability[minimum[0]][minimum[1]][i] -= partitioned[i];
                         movings.Add(new[]
                         {
-                            minimum[0], destination, minimum[1], i, used
+                            minimum[0], destination, minimum[1], i, partitioned[i], doneTasks
                         });
                         partitioned[i] = 0;
                     }
                     else
                     {
+                        int doneTasks = (tasks < problem.TasksPerUser[i].Tasks * partitioned[i])
+                            ? tasks
+                            : available * problem.TasksPerUser[i].Tasks;
+                        tasks -= available * problem.TasksPerUser[i].Tasks;
                         partitioned[i] -= available;
                         problem.Availability[minimum[0]][minimum[1]][i] -= available;
-                        tasks = unchecked(tasks - (available * problem.TasksPerUser[i].Tasks));
                         movings.Add(new[]
                         {
-                            minimum[0], destination, minimum[1], i, available,
+                            minimum[0], destination, minimum[1], i, available, doneTasks
                         });
                     }
                 }
@@ -109,40 +115,90 @@ namespace OMA_Project
             int sum = 0;
             for (int i = solution.Count; i-- > 0;)
             {
-                int costo = problem.Matrix.GetCost(solution.Movings[i][2], solution.Movings[i][3],
-                    solution.Movings[i][0], solution.Movings[i][1]);
-                costo = costo * (solution.Movings[i][4]);
-            sum += costo;
+                sum += (problem.Matrix.GetCost(solution.Movings[i][2], solution.Movings[i][3],
+                    solution.Movings[i][0], solution.Movings[i][1]) * solution.Movings[i][4]);
             }
             return sum;
         }
 
-        public int[] Partition(int toBePartitioned)
+        private int[] Partition(int toBePartitioned)
         {
             int[] returns = new int[problem.TasksPerUser.Length];
             int value = toBePartitioned;
-            while (value > problem.TasksPerUser[problem.TasksPerUser.Length - 1].Tasks)
+            int[] available = problem.TotalUsers();
+            while (value > problem.TasksPerUser[0].Tasks)
             {
-                bool isDivisible = false;
-                for (int i = 0; i < problem.TasksPerUser.Length && !isDivisible; ++i)
+                bool[] isDivisible = new bool[problem.TasksPerUser.Length];
+                for (int i = problem.TasksPerUser.Length; i-- > 0;)
                 {
-                    if (problem.TasksPerUser[i].Tasks != 1 && value % problem.TasksPerUser[i].Tasks == 0)
+                    if (problem.TasksPerUser[i].Tasks != 1
+                        && available[i] != 0
+                        && value % problem.TasksPerUser[i].Tasks == 0)
                     {
-                        isDivisible = true;
-                        value -= problem.TasksPerUser[i].Tasks;
-                        ++returns[i];
+                        isDivisible[i] = true;
                     }
                 }
-                if (!isDivisible)
+                int tempMax = 0;
+                int tempUserMax = -1;
+                if (isDivisible.Any(s => s))
                 {
-                    value -= problem.TasksPerUser[2].Tasks;
-                    ++returns[2];
+                    for (int i = problem.TasksPerUser.Length; i-- > 0;)
+                    {
+                        if (isDivisible[i] && tempMax < available[i])
+                        {
+                            tempMax = available[i];
+                            tempUserMax = i;
+                        }
+                    }
+                }
+                if (isDivisible.All(s => !s))
+                {
+                    /*
+                    bool isAvailable = false;
+                    for (int i = problem.TasksPerUser.Length; i-- > 0;)
+                    {
+                        isAvailable = available[i] != 0;
+                        if (isAvailable && value > problem.TasksPerUser[i].Tasks)
+                        {
+                            --available[i];
+                            value -= problem.TasksPerUser[i].Tasks;
+                            ++returns[i];
+                        }
+                    }*/
+                    tempMax = 0;
+                    tempUserMax = -1;
+                    for (int i = problem.TasksPerUser.Length; i-- > 0;)
+                    {
+                        if (tempMax < available[i])
+                        {
+                            tempMax = available[i];
+                            tempUserMax = i;
+                        }
+                    }
+                }
+                ++returns[tempUserMax];
+                --available[tempUserMax];
+                value -= problem.TasksPerUser[tempUserMax].Tasks;
+            }
+            while (value > 0)
+            {
+                for (int i = 0; i < problem.TasksPerUser.Length; ++i)
+                {
+                    if (available[i] != 0)
+                    {
+                        ++returns[i];
+                        value -= problem.TasksPerUser[i].Tasks;
+                        --available[i];
+                    }
                 }
             }
-            if (value != 0)
+            // check block
+            int totalTask = problem.TasksPerUser.Select((t, i) => returns[i]*t.Tasks).Sum();
+            if (totalTask != toBePartitioned)
             {
-                ++returns[problem.TasksPerUser.Length - 1];
+                var x = 0;
             }
+            // end check block
             return returns;
         }
     }
