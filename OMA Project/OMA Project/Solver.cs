@@ -193,12 +193,89 @@ namespace OMA_Project
                 }
             }
             // check block
-            int totalTask = problem.TasksPerUser.Select((t, i) => returns[i]*t.Tasks).Sum();
+            int totalTask = problem.TasksPerUser.Select((t, i) => returns[i] * t.Tasks).Sum();
             if (totalTask != toBePartitioned)
             {
                 var x = 0;
             }
             // end check block
+            return returns;
+        }
+
+        public void OptimizeSolving()
+        {
+            int[] tasks = problem.Tasks;
+            int[] d = new int[problem.TasksPerUser.Length];
+            for (int i = 0; i < 3; i++)
+            {
+                d[i] = problem.TasksPerUser[i].Tasks;
+            }
+
+            for (int i = 0; i < tasks.Length; i++)
+            {
+                int a = tasks[i];
+                int user = 0;
+                int[] c = new int[a + 1];
+                int[] s = new int[a + 1];
+                c[0] = 0;
+                s[0] = 0;
+
+                for (int k = 1; k <= a; k++)
+                {
+                    int min = int.MaxValue;
+                    int p = k;
+                    int tempMin;
+                    int tempUser;
+                    int overBooking = int.MaxValue;
+                    for (int j = 0; j < d.Length; j++)
+                    {
+                        if (d[j] - d[0] < p)
+                        {
+                            if (p - d[j] < 0)
+                            {
+                                tempMin = 1;
+                                tempUser = j;
+                            }
+
+                            else if (1 + c[p - d[j]] < min)
+                            {
+                                tempMin = 1 + c[p - d[j]];
+                                tempUser = j;
+                            }
+
+                            else break;
+                            int[] neededUsers = UsersNeeded(p, s);
+                            int tempOverBooking = p;
+                            for(int z=0; z<problem.TasksPerUser.Length; z++)
+                            {
+                                tempOverBooking -= neededUsers[z] * problem.TasksPerUser[z].Tasks;
+                            }
+                            tempOverBooking *= -1;
+                            if (tempOverBooking <= overBooking)
+                            {
+                                min = tempMin;
+                                user = tempUser;
+                            }
+                        }
+                    }
+                    c[k] = min;
+                    s[k] = user;
+
+                }
+
+                var x = UsersNeeded(47, s);
+            }
+
+        }
+
+        private int[] UsersNeeded(int tasks, int[] s)
+        {
+            int[] returns = new int[problem.TasksPerUser.Length];
+            for (int i = tasks; i > 0;)
+            {
+                returns[s[i]]++;
+                i -= problem.TasksPerUser[s[i]].Tasks;
+            }
             return returns;
         }
     }
