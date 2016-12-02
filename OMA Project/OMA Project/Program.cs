@@ -22,7 +22,8 @@ namespace OMA_Project
             {
                 Stopwatch s = Stopwatch.StartNew();
                 Solver solver = new Solver(x);
-                solver.OptimizeSolving();
+                int[] availabilities = x.TotalUsers();
+                solver.OptimizeSolving(0, availabilities);
                 r.Elapsed += Callback;
                 r.Enabled = true;
                 Solution currentSolution = solver.GreedySolution();
