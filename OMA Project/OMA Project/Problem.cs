@@ -47,7 +47,7 @@ namespace OMA_Project
         public int[][][] Availability
         {
             get;
-            private set;
+            set;
         }
 
         public int Users

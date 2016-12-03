@@ -19,7 +19,7 @@ namespace OMA_Project
             Solution solution = new Solution(problem.Matrix.Cells);
             var newTask = (int[])problem.Tasks.Clone();
             var orderedTask = newTask.Select((t, c) => new { cell = c, task = t })
-                .Where(t => t.task != 0).OrderByDescending(t => t.task).ToArray();
+                .Where(t => t.task != 0).OrderBy(t => t.task).ToArray();
             for (int i = orderedTask.Length; i-- > 0;)
             {
                 SolveTasks(orderedTask[i].cell, orderedTask[i].task, solution);

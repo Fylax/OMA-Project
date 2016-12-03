@@ -34,7 +34,6 @@ namespace OMA_Project
                 while (r.Enabled)
                 {
                     counter++;
-                    
                 }
                 s.Stop();
 
