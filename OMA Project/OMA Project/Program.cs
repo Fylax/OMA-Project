@@ -11,7 +11,7 @@ namespace OMA_Project
         public static Random generator = new Random();
         public static void Main(string[] args)
         {
-            Problem x = Problem.ReadFromFile(@"D:\Download\hardinstances\Co_30_1_ST_0.txt");
+            Problem x = Problem.ReadFromFile(@"D:\Download\hardinstances\Co_100_1_ST_0.txt");
 
             GC.Collect();
             RuntimeHelpers.PrepareConstrainedRegions();
@@ -22,8 +22,6 @@ namespace OMA_Project
             {
                 Stopwatch s = Stopwatch.StartNew();
                 Solver solver = new Solver(x);
-                int[] availabilities = x.TotalUsers();
-                solver.OptimizeSolving(0, availabilities);
                 r.Elapsed += Callback;
                 r.Enabled = true;
                 Solution currentSolution = solver.GreedySolution();

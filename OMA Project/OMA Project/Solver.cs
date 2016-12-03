@@ -19,7 +19,7 @@ namespace OMA_Project
             Solution solution = new Solution(problem.Matrix.Cells);
             var newTask = (int[])problem.Tasks.Clone();
             var orderedTask = newTask.Select((t, c) => new { cell = c, task = t })
-                .Where(t => t.task != 0).OrderBy(t => t.task).ToArray();
+                .Where(t => t.task != 0).OrderByDescending(t => t.task).ToArray();
             for (int i = orderedTask.Length; i-- > 0;)
             {
                 SolveTasks(orderedTask[i].cell, orderedTask[i].task, solution);
@@ -29,7 +29,16 @@ namespace OMA_Project
 
         private void SolveTasks(int destination, int tasks, Solution movings)
         {
-            int[] partitioned = Partition(tasks);
+            int[] totUsers = problem.TotalUsers();
+            bool[] usable = new bool[totUsers.Length];
+            for (int i = totUsers.Length; i-- > 0;)
+            {
+                if (totUsers[i] != 0)
+                {
+                    usable[i] = true;
+                }
+            }
+            int[] partitioned = OptimizeSolving(tasks, usable);
             for (int i = partitioned.Length; i-- > 0;)
             {
                 while (partitioned[i] != 0)
@@ -61,6 +70,12 @@ namespace OMA_Project
                         {
                             minimum[0], destination, minimum[1], i, available, doneTasks
                         });
+                    }
+                    totUsers = problem.TotalUsers();
+                    if (totUsers[i] == 0)
+                    {
+                        usable[i] = false;
+                        partitioned = OptimizeSolving(tasks, usable);
                     }
                 }
             }
@@ -120,103 +135,23 @@ namespace OMA_Project
             }
             return sum;
         }
-
-        private int[] Partition(int toBePartitioned)
-        {
-            int[] returns = new int[problem.TasksPerUser.Length];
-            int value = toBePartitioned;
-            int[] available = problem.TotalUsers();
-            while (value > problem.TasksPerUser[0].Tasks)
-            {
-                bool[] isDivisible = new bool[problem.TasksPerUser.Length];
-                for (int i = problem.TasksPerUser.Length; i-- > 0;)
-                {
-                    if (problem.TasksPerUser[i].Tasks != 1
-                        && available[i] != 0
-                        && value % problem.TasksPerUser[i].Tasks == 0)
-                    {
-                        isDivisible[i] = true;
-                    }
-                }
-                int tempMax = 0;
-                int tempUserMax = -1;
-                if (isDivisible.Any(s => s))
-                {
-                    for (int i = problem.TasksPerUser.Length; i-- > 0;)
-                    {
-                        if (isDivisible[i] && tempMax < available[i])
-                        {
-                            tempMax = available[i];
-                            tempUserMax = i;
-                        }
-                    }
-                }
-                if (isDivisible.All(s => !s))
-                {
-                    /*
-                    bool isAvailable = false;
-                    for (int i = problem.TasksPerUser.Length; i-- > 0;)
-                    {
-                        isAvailable = available[i] != 0;
-                        if (isAvailable && value > problem.TasksPerUser[i].Tasks)
-                        {
-                            --available[i];
-                            value -= problem.TasksPerUser[i].Tasks;
-                            ++returns[i];
-                        }
-                    }*/
-                    tempMax = 0;
-                    tempUserMax = -1;
-                    for (int i = problem.TasksPerUser.Length; i-- > 0;)
-                    {
-                        if (tempMax < available[i])
-                        {
-                            tempMax = available[i];
-                            tempUserMax = i;
-                        }
-                    }
-                }
-                ++returns[tempUserMax];
-                --available[tempUserMax];
-                value -= problem.TasksPerUser[tempUserMax].Tasks;
-            }
-            while (value > 0)
-            {
-                for (int i = 0; i < problem.TasksPerUser.Length; ++i)
-                {
-                    if (available[i] != 0)
-                    {
-                        ++returns[i];
-                        value -= problem.TasksPerUser[i].Tasks;
-                        --available[i];
-                    }
-                }
-            }
-            // check block
-            int totalTask = problem.TasksPerUser.Select((t, i) => returns[i] * t.Tasks).Sum();
-            if (totalTask != toBePartitioned)
-            {
-                var x = 0;
-            }
-            // end check block
-            return returns;
-        }
-
-        public void OptimizeSolving(int cell, int[] av)
+        
+        public int[] OptimizeSolving(int task, bool[] usable)
         {
             int[] d = new int[problem.TasksPerUser.Length];
+            int[] av = problem.TotalUsers();
             for (int i = 0; i < 3; i++)
             {
                 d[i] = problem.TasksPerUser[i].Tasks;
             }
 
-            int a = problem.Tasks[cell];
+            int a = task;
             int user = 0;
             int[] c = new int[a + 1];
             int[] s = new int[a + 1];
             c[0] = 0;
             s[0] = 0;
-            
+
 
             for (int k = 1; k <= a; k++)
             {
@@ -227,49 +162,42 @@ namespace OMA_Project
                 int overBooking = int.MaxValue;
                 for (int j = 0; j < d.Length; j++)
                 {
-                    if (av[j] != 0)
+                    if (d[j] - d[0] < p && usable[j])
                     {
-                        if (d[j] - d[0] < p)
+                        if (p - d[j] < 0)
                         {
-                            if (p - d[j] < 0)
-                            {
-                                tempMin = 1;
-                                tempUser = j;
-                            }
+                            tempMin = 1;
+                            tempUser = j;
+                        }
 
-                            else if (1 + c[p - d[j]] < min)
-                            {
-                                tempMin = 1 + c[p - d[j]];
-                                tempUser = j;
-                            }
+                        else if (1 + c[p - d[j]] < min)
+                        {
+                            tempMin = 1 + c[p - d[j]];
+                            tempUser = j;
+                        }
 
-                            else break;
-                            int[] neededUsers = UsersNeeded(p, s);
-                            int tempOverBooking = p;
-                            for (int z = 0; z < problem.TasksPerUser.Length; z++)
-                            {
-                                tempOverBooking -= neededUsers[z] * problem.TasksPerUser[z].Tasks;
-                            }
-                            tempOverBooking *= -1;
-                            if (tempOverBooking <= overBooking)
-                            {
-                                min = tempMin;
-                                user = tempUser;
+                        else break;
+                        int[] neededUsers = UsersNeeded(p, s);
+                        int tempOverBooking = p;
+                        for (int z = 0; z < problem.TasksPerUser.Length; z++)
+                        {
+                            tempOverBooking -= neededUsers[z] * problem.TasksPerUser[z].Tasks;
+                        }
+                        tempOverBooking *= -1;
+                        if (tempOverBooking <= overBooking)
+                        {
+                            min = tempMin;
+                            user = tempUser;
 
-                            }
                         }
                     }
-                    c[k] = min;
-                    s[k] = user;
-
                 }
+                c[k] = min;
+                s[k] = user;
+
             }
 
-            var decrement = UsersNeeded(problem.Tasks[cell], s);
-            for(int i=0; i<decrement.Length; i++)
-            {
-                av[i] -= decrement[i];
-            }
+            return UsersNeeded(task, s);
         }
 
         private int[] UsersNeeded(int tasks, int[] s)
@@ -282,5 +210,6 @@ namespace OMA_Project
             }
             return returns;
         }
+
     }
 }

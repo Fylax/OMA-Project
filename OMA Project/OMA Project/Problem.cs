@@ -50,6 +50,20 @@ namespace OMA_Project
             private set;
         }
 
+        public int Users
+        {
+            get
+            {
+                int returns = 0;
+                int[] total = TotalUsers();
+                for (int i = 0; i < total.Length;++i)
+                {
+                    returns += total[i];
+                }
+                return returns;
+            }
+        }
+
         public int[] TotalUsers()
         {
             int[] users = new int[TasksPerUser.Length];
