@@ -20,6 +20,9 @@ namespace OMA_Project
             get;
             private set;
         }
+
+        public int Cells { get; }
+        public int UserTypes { get; }
         
         /// <summary>
         /// Lista con il numero di task per ogni cella
@@ -50,10 +53,9 @@ namespace OMA_Project
             set;
         }
 
-        public int Users
+        public int Users()
         {
-            get
-            {
+
                 int returns = 0;
                 int[] total = TotalUsers();
                 for (int i = 0; i < total.Length;++i)
@@ -61,12 +63,11 @@ namespace OMA_Project
                     returns += total[i];
                 }
                 return returns;
-            }
         }
 
         public int[] TotalUsers()
         {
-            int[] users = new int[TasksPerUser.Length];
+            int[] users = new int[UserTypes];
             for (int i = Availability.Length; i-- > 0;)
             {
                 for (int j = Availability[0].Length; j-- > 0;)
@@ -82,15 +83,16 @@ namespace OMA_Project
 
         public int[][][] immutableAvailability;
 
-        private Problem()
+        private Problem(int cells, int users)
         {
-
+            Cells = cells;
+            UserTypes = users;
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times")]
         public static Problem ReadFromFile(string inputFile)
         {
-            Problem prob = new Problem();
+            Problem prob;
             using (FileStream stream = new FileStream(inputFile, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.SequentialScan))
             using (StreamReader file = new StreamReader(stream, System.Text.Encoding.UTF8, true, 4096))
             {
@@ -101,13 +103,15 @@ namespace OMA_Project
                 int timings = int.Parse(parts[1]);
                 int userTypes = int.Parse(parts[2]);
 
+                prob = new Problem(cells, userTypes);
+
                 // Read third row (# Tasks per user)
                 file.ReadLine();
                 line = file.ReadLine();
                 int[] tasksPerUser = Array.ConvertAll(line.Trim().Split(' '), int.Parse);
                 var orderedTaskPerUser = tasksPerUser.Select((t, u) => new {task = t, user = u})
                     .OrderBy (t => t.task).ToList();
-                prob.TasksPerUser = new TaskPerUser[tasksPerUser.Length];
+                prob.TasksPerUser = new TaskPerUser[userTypes];
                 for (int i = 0; i < orderedTaskPerUser.Count; ++i)
                 {
                     prob.TasksPerUser[i] = new TaskPerUser(orderedTaskPerUser[i].user, orderedTaskPerUser[i].task);

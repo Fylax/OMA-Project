@@ -4,8 +4,6 @@
     {
         private readonly int[][][][] costMatrix;
 
-        public int Cells => costMatrix.Length;
-
         public Costs(int numCells, int timeSlots, int userTypes)
         {
             costMatrix = new int[numCells][][][];

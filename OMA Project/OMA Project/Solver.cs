@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using OMA_Project.Extensions;
 
 namespace OMA_Project
 {
@@ -16,7 +14,7 @@ namespace OMA_Project
 
         public Solution GreedySolution()
         {
-            Solution solution = new Solution(problem.Matrix.Cells);
+            Solution solution = new Solution(problem.Cells);
             var newTask = (int[])problem.Tasks.Clone();
             var orderedTask = newTask.Select((t, c) => new { cell = c, task = t })
                 .Where(t => t.task != 0).OrderBy(t => t.task).ToArray();
@@ -95,14 +93,14 @@ namespace OMA_Project
                 currentSolution.RemoveCell(solutionsToCell[0][1]);
             }
 
-            int[][][] toBeRestored = new int[problem.Matrix.Cells][][];
+            int[][][] toBeRestored = new int[problem.Cells][][];
             int timeSlots = problem.Availability[0].Length;
             for (int i = toBeRestored.Length; i-- > 0;)
             {
                 toBeRestored[i] = new int[timeSlots][];
                 for (int j = timeSlots; j-- > 0;)
                 {
-                    toBeRestored[i][j] = new int[problem.TasksPerUser.Length];
+                    toBeRestored[i][j] = new int[problem.UserTypes];
                 }
             }
             for (int i = solutionsToCell.Length; i-- > 0;)
@@ -136,24 +134,22 @@ namespace OMA_Project
             return sum;
         }
         
-        public int[] OptimizeSolving(int task, bool[] usable)
+        public int[] OptimizeSolving(int tasks, bool[] usable)
         {
-            int[] d = new int[problem.TasksPerUser.Length];
-            int[] av = problem.TotalUsers();
+            int[] d = new int[problem.UserTypes];
             for (int i = 0; i < 3; i++)
             {
                 d[i] = problem.TasksPerUser[i].Tasks;
             }
 
-            int a = task;
             int user = 0;
-            int[] c = new int[a + 1];
-            int[] s = new int[a + 1];
+            int[] c = new int[tasks + 1];
+            int[] s = new int[tasks + 1];
             c[0] = 0;
             s[0] = 0;
 
 
-            for (int k = 1; k <= a; k++)
+            for (int k = 1; k <= tasks; k++)
             {
                 int min = int.MaxValue;
                 int p = k;
@@ -167,19 +163,19 @@ namespace OMA_Project
                         if (p - d[j] < 0)
                         {
                             tempMin = 1;
-                            tempUser = j;
+                            tempUser = problem.TasksPerUser[j].UserType;
                         }
 
                         else if (1 + c[p - d[j]] < min)
                         {
                             tempMin = 1 + c[p - d[j]];
-                            tempUser = j;
+                            tempUser = problem.TasksPerUser[j].UserType;
                         }
 
                         else break;
                         int[] neededUsers = UsersNeeded(p, s);
                         int tempOverBooking = p;
-                        for (int z = 0; z < problem.TasksPerUser.Length; z++)
+                        for (int z = 0; z < problem.UserTypes; z++)
                         {
                             tempOverBooking -= neededUsers[z] * problem.TasksPerUser[z].Tasks;
                         }
@@ -188,7 +184,7 @@ namespace OMA_Project
                         {
                             min = tempMin;
                             user = tempUser;
-
+                            overBooking = tempOverBooking;
                         }
                     }
                 }
@@ -197,12 +193,12 @@ namespace OMA_Project
 
             }
 
-            return UsersNeeded(task, s);
+            return UsersNeeded(tasks, s);
         }
 
-        private int[] UsersNeeded(int tasks, int[] s)
+        private int[] UsersNeeded(int tasks, IReadOnlyList<int> s)
         {
-            int[] returns = new int[problem.TasksPerUser.Length];
+            int[] returns = new int[problem.UserTypes];
             for (int i = tasks; i > 0;)
             {
                 returns[s[i]]++;

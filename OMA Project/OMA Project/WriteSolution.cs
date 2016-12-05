@@ -7,7 +7,7 @@ namespace OMA_Project
     {
         public static void Write(string filename, IEnumerable<int[]> solution, int fitness, long elapsedTime, string instance)
         {
-            string name = Path.GetFileName(@instance).Split('.')[0];
+            string name = Path.GetFileName(@instance)?.Split('.')[0];
             int u1 = 0;
             int u2 = 0;
             int u3 = 0;
