@@ -12,7 +12,7 @@ namespace OMA_Project
         public static Random generator = new Random();
         public static void Main(string[] args)
         {
-            Problem x = Problem.ReadFromFile(@"C:\Users\Fylax\Desktop\Material_assignment\input\Co_30_1_NT_0.txt");
+            Problem x = Problem.ReadFromFile(@"C:\Users\vergo\Google Drive\PoliTO - Magistrale\• 1.1 Optimization Methods and Algorithms\Assignement\Materiale\material_assignment_v2\Material_assignment\input\Co_30_1_NT_0.txt");
 
             GC.Collect();
             RuntimeHelpers.PrepareConstrainedRegions();

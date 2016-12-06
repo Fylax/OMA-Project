@@ -204,11 +204,11 @@ namespace OMA_Project
 
             for (int i = Movings.Count; i-- > 0;)
             {
-                if (Movings[i][0] == Movings[i][1])
-                    return false;
+                if (Movings[i][0] == Movings[i][1])     //Se la partenza è uguale alla destinazione (Non possibile)
+                    return false;                       //Soluzione unfeasible
 
-                tasks[Movings[i][1]] -= Movings[i][5];
-                availabilities[Movings[i][0]][Movings[i][2]][Movings[i][3]] -= Movings[i][4];
+                tasks[Movings[i][1]] -= Movings[i][5];  //Aggiorna i task da fare rimuovendo quelli svolti dal vettore soluzione considerato
+                availabilities[Movings[i][0]][Movings[i][2]][Movings[i][3]] -= Movings[i][4]; //Aggiorna le disponibilità per la cella di partenza, per un certo timeslot, per un certo tipo utente
             }
 
             for (int i = tasks.Length; i-- > 0;)
@@ -223,7 +223,7 @@ namespace OMA_Project
                 {
                     for (int k = availabilities[0][0].Length; k-- > 0;)
                     {
-                        if (availabilities[i][j][k] < 0)
+                        if (availabilities[i][j][k] < 0)                //Se la disponibilità di utenti in cella i, timeslot j e tipoutente k è negativa
                         {
                             return false;
                         } 
