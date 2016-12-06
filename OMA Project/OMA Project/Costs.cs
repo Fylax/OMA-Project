@@ -1,4 +1,6 @@
-﻿namespace OMA_Project
+﻿using System.Collections.Generic;
+
+namespace OMA_Project
 {
     public class Costs
     {
@@ -56,6 +58,40 @@
                 }
             }
             return new[] { minStart, minTime };
+        }
+
+        public int[] GetMin(int destination, TaskPerUser[] taskPerUser, int[][][] availableUsers, List<int[]> avoid)
+        {
+            double minValue = double.MaxValue;
+            int minUser = 0;
+            int minTime = 0;
+            int minStart = 0;
+            for (int start = costMatrix[0].Length; start-- > 0;)
+            {
+                if (start != destination)
+                {
+                    for (int timeSlot = costMatrix[0][0].Length; timeSlot-- > 0;)
+                    {
+                        for (int userType = costMatrix[0][0][0].Length; userType-- > 0;)
+                        {
+
+                            double weightedCost = costMatrix[destination][start][timeSlot][userType] * taskPerUser[taskPerUser.Length - 1].Tasks /
+                                               (double)taskPerUser[userType].Tasks;
+                            if (minValue > weightedCost && availableUsers[start][timeSlot][userType] != 0)
+                            {
+                                if (!avoid.Contains(new[] { start, timeSlot, userType }))
+                                {
+                                    minValue = weightedCost;
+                                    minStart = start;
+                                    minTime = timeSlot;
+                                    minUser = userType;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return new[] { minStart, minTime, minUser };
         }
     }
 }
