@@ -60,7 +60,7 @@ namespace OMA_Project
             return new[] { minStart, minTime };
         }
 
-        public int[] GetMin(int destination, TaskPerUser[] taskPerUser, int[][][] availableUsers, List<int[]> avoid)
+        public int[] GetMin(int destination, TaskPerUser[] taskPerUser, int[][][] availableUsers, HashSet<int[]> avoid)
         {
             double minValue = double.MaxValue;
             int minUser = 0;

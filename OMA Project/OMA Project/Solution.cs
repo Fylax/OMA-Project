@@ -213,7 +213,7 @@ namespace OMA_Project
 
             for (int i = tasks.Length; i-- > 0;)
             {
-                if (tasks[i] != 0)
+                if (tasks[i] > 0)
                     return false;
             }
 
