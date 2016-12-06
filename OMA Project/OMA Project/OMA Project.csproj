@@ -60,6 +60,7 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="TabuList.cs" />
     <Compile Include="Costs.cs" />
     <Compile Include="Extensions\ExtensionMethods.cs" />
     <Compile Include="GlobalSuppressions.cs" />

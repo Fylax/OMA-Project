@@ -6,11 +6,53 @@ namespace OMA_Project
     public class Solver
     {
         private readonly Problem problem;
+        private TabuList tabuList;
 
         public Solver(Problem prob)
         {
             problem = prob;
         }
+
+        /*
+         * 
+         *         public Solution GreedySolution()
+        {
+            Solution solution = new Solution(problem.Matrix.Cells);
+            var newTask = (int[]) problem.Tasks.Clone();
+            var orderedTask = newTask.Select((t, c) => new {cell = c, task = t})
+                .Where(t => t.task != 0).OrderBy(t => t.task).ToArray();
+            for (int i = orderedTask.Length; i-- > 0;)
+            {
+                SolveTasks(orderedTask[i].cell, orderedTask[i].task, solution);
+            }
+            return solution;
+        }
+
+        private void SolveTasks(int destination, int tasks, Solution movings)
+        {
+            while (tasks != 0)
+            {
+                int[] minimum = problem.Matrix.GetMin(destination, problem.TaskPerUser, problem.Availability);
+                int available = problem.Availability[minimum[0]][minimum[1]][minimum[2]];
+                if (available * problem.TaskPerUser[minimum[2]] >= tasks)
+                {
+                    int used = (int)Math.Ceiling(tasks / (double)problem.TaskPerUser[minimum[2]]);
+                    problem.Availability[minimum[0]][minimum[1]][minimum[2]] -= used;
+                    movings.Add(new[] { minimum[0], destination, minimum[1], minimum[2], used, tasks });
+                    tasks = 0;
+                }
+                else
+                {
+                    problem.Availability[minimum[0]][minimum[1]][minimum[2]] -= available;
+                    tasks = unchecked(tasks - (available * problem.TaskPerUser[minimum[2]]));
+                    movings.Add(new[] { minimum[0], destination, minimum[1], minimum[2], available, unchecked(available * problem.TaskPerUser[minimum[2]]) });
+                }
+            }
+        }
+         * 
+         * 
+         * 
+         * */
 
         public Solution GreedySolution()
         {
@@ -205,6 +247,17 @@ namespace OMA_Project
                 i -= problem.TasksPerUser[s[i]].Tasks;
             }
             return returns;
+        }
+
+        public void VNS(Solution movings, int counter)
+        {
+            int droppedSolution;
+            for(int i=0; i<counter; i++)
+            {
+                droppedSolution = Program.generator.Next(movings.Count);
+                tabuList.Add(movings.ElementAt(droppedSolution));
+                movings.RemoveAt(droppedSolution);
+            }
         }
 
     }

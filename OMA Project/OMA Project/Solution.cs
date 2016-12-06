@@ -104,6 +104,11 @@ namespace OMA_Project
             }
         }
 
+        public void RemoveAt(int index)
+        {
+            this.Remove(this.ElementAt(index));
+        }
+
         /// <summary>
         /// Ottiene uno spostamento a un dato indice
         /// </summary>
