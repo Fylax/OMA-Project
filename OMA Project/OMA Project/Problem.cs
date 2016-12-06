@@ -22,6 +22,7 @@ namespace OMA_Project
         }
 
         public int Cells { get; }
+        public int TimeSlots { get; }
         public int UserTypes { get; }
         
         /// <summary>
@@ -68,11 +69,11 @@ namespace OMA_Project
         public int[] TotalUsers()
         {
             int[] users = new int[UserTypes];
-            for (int i = Availability.Length; i-- > 0;)
+            for (int i = Cells; i-- > 0;)
             {
-                for (int j = Availability[0].Length; j-- > 0;)
+                for (int j = TimeSlots; j-- > 0;)
                 {
-                    for (int k = Availability[0][0].Length; k-- > 0;)
+                    for (int k = UserTypes; k-- > 0;)
                     {
                         users[k] += Availability[i][j][k];
                     }
@@ -83,9 +84,10 @@ namespace OMA_Project
 
         public int[][][] immutableAvailability;
 
-        private Problem(int cells, int users)
+        private Problem(int cells, int timeSlots, int users)
         {
             Cells = cells;
+            TimeSlots = timeSlots;
             UserTypes = users;
         }
 
@@ -103,7 +105,7 @@ namespace OMA_Project
                 int timings = int.Parse(parts[1]);
                 int userTypes = int.Parse(parts[2]);
 
-                prob = new Problem(cells, userTypes);
+                prob = new Problem(cells, timings, userTypes);
 
                 // Read third row (# Tasks per user)
                 file.ReadLine();

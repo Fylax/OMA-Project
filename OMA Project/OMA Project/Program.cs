@@ -3,6 +3,7 @@ using System.Timers;
 using System;
 using System.Runtime;
 using System.Runtime.CompilerServices;
+using OMA_Project.Extensions;
 
 namespace OMA_Project
 {
@@ -11,7 +12,7 @@ namespace OMA_Project
         public static Random generator = new Random();
         public static void Main(string[] args)
         {
-            Problem x = Problem.ReadFromFile(@"C:\Users\vergo\Google Drive\PoliTO - Magistrale\• 1.1 Optimization Methods and Algorithms\Assignement\Materiale\material_assignment_v2\Material_assignment\input\Co_100_1_T_7.txt");
+            Problem x = Problem.ReadFromFile(@"C:\Users\Fylax\Desktop\Material_assignment\input\Co_30_1_NT_0.txt");
 
             GC.Collect();
             RuntimeHelpers.PrepareConstrainedRegions();
@@ -26,7 +27,6 @@ namespace OMA_Project
                 r.Enabled = true;
                 Solution currentSolution = solver.InitialSolution();
                 Solution bestSolution = currentSolution.Clone();
-                bool feasible = bestSolution.isFeasible(x);
                 int bestFitness = solver.ObjectiveFunction(currentSolution);
                 int tempFitness;
 
@@ -36,23 +36,33 @@ namespace OMA_Project
                 int k = k_0;
 
                 ulong counter = 0;
+                bool accepted = true;
+                int[][][] availabilities = x.Availability.DeepClone();
                 while (r.Enabled)
                 {
+                    if (!accepted)
+                    {
+                        availabilities = x.Availability.DeepClone();
+                    }
                     solver.VNS(currentSolution, k);
                     tempFitness = solver.ObjectiveFunction(currentSolution);
                     if (tempFitness < bestFitness)
                     {
+                        accepted = true;
                         bestSolution = currentSolution.Clone();
                         bestFitness = tempFitness;
                         k = k_0;
                     }
                     else
                     {
-                        k = (k == k_max) ? k_0: k++;
+                        accepted = false;
+                        k = (k == k_max) ? k_0: k + 1;
                         currentSolution = bestSolution.Clone();
+                        x.Availability = availabilities.DeepClone();
                     }
                     counter++;
                 }
+                bool feasible = bestSolution.isFeasible(x);
                 s.Stop();
 
                 //WriteSolution.Write(args[1], bestSolution, bestFitness, s.ElapsedMilliseconds, args[0]);

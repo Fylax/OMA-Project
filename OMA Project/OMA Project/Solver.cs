@@ -124,50 +124,7 @@ namespace OMA_Project
                 }
             }
         }
-        /*
-        private void DropNeighborhood(Solution currentSolution, bool max)
-        {
-            int[][] solutionsToCell;
-            if (max)
-            {
-                solutionsToCell = currentSolution.MovementsMaxDestination();
-                currentSolution.RemoveMax();
-            }
-            else
-            {
-                solutionsToCell = currentSolution.MovingsToRandomCell();
-                currentSolution.RemoveCell(solutionsToCell[0][1]);
-            }
-
-            int[][][] toBeRestored = new int[problem.Cells][][];
-            int timeSlots = problem.Availability[0].Length;
-            for (int i = toBeRestored.Length; i-- > 0;)
-            {
-                toBeRestored[i] = new int[timeSlots][];
-                for (int j = timeSlots; j-- > 0;)
-                {
-                    toBeRestored[i][j] = new int[problem.UserTypes];
-                }
-            }
-            for (int i = solutionsToCell.Length; i-- > 0;)
-            {
-                int source = solutionsToCell[i][0];
-                int timeSlot = solutionsToCell[i][2];
-                int userType = solutionsToCell[i][3];
-                toBeRestored[source][timeSlot][userType] = unchecked(
-                    solutionsToCell[i][4] + problem.Availability[source][timeSlot][userType]);
-                problem.Availability[source][timeSlot][timeSlot] = 0;
-            }
-            SolveTasks(solutionsToCell[0][1], problem.Tasks[solutionsToCell[0][1]], currentSolution);
-            for (int i = solutionsToCell.Length; i-- > 0;)
-            {
-                int source = solutionsToCell[i][0];
-                int timeSlot = solutionsToCell[i][2];
-                int userType = solutionsToCell[i][3];
-                problem.Availability[source][timeSlot][userType] = toBeRestored[source][timeSlot][userType];
-            }
-        }
-        */
+        
         public int ObjectiveFunction(Solution solution)
         {
             int sum = 0;

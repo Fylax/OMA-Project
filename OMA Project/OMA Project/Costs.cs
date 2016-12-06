@@ -74,18 +74,16 @@ namespace OMA_Project
                     {
                         for (int userType = costMatrix[0][0][0].Length; userType-- > 0;)
                         {
-
-                            double weightedCost = costMatrix[destination][start][timeSlot][userType] * taskPerUser[taskPerUser.Length - 1].Tasks /
-                                               (double)taskPerUser[userType].Tasks;
-                            if (minValue > weightedCost && availableUsers[start][timeSlot][userType] != 0)
+                            double weightedCost = costMatrix[destination][start][timeSlot][userType] * 
+                                taskPerUser[taskPerUser.Length - 1].Tasks /
+                                (double)taskPerUser[userType].Tasks;
+                            if (minValue > weightedCost && availableUsers[start][timeSlot][userType] != 0 &&
+                                !avoid.Contains(new[] { start, timeSlot, userType }))
                             {
-                                if (!avoid.Contains(new[] { start, timeSlot, userType }))
-                                {
-                                    minValue = weightedCost;
-                                    minStart = start;
-                                    minTime = timeSlot;
-                                    minUser = userType;
-                                }
+                                minValue = weightedCost;
+                                minStart = start;
+                                minTime = timeSlot;
+                                minUser = userType;
                             }
                         }
                     }
