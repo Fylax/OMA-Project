@@ -12,7 +12,7 @@ namespace OMA_Project
         public static Random generator = new Random();
         public static void Main(string[] args)
         {
-            Problem x = Problem.ReadFromFile(@"D:\Dropbox\Uni Mattia\Magistrale\Primo semestre\Optimization methods and algorithms\material_assignment\Material_assignment\input\Co_100_1_T_7.txt");
+            Problem x = Problem.ReadFromFile(@"D:\Dropbox\Uni Mattia\Magistrale\Primo semestre\Optimization methods and algorithms\material_assignment\Material_assignment\input\Co_30_1_NT_0.txt");
 
             GC.Collect();
             RuntimeHelpers.PrepareConstrainedRegions();
@@ -30,8 +30,8 @@ namespace OMA_Project
                 int bestFitness = solver.ObjectiveFunction(currentSolution);
                 int tempFitness;
 
-                const int k_0 = 26;
-                const int k_max = 65;
+                const int k_0 = 30;  
+                const int k_max = 80;
 
                 int k = k_0;
 
@@ -66,6 +66,7 @@ namespace OMA_Project
                 s.Stop();
                 Console.WriteLine(counter);
                 Console.WriteLine(bestFitness);
+                Console.WriteLine(feasible);
                 Console.Read();
 
                 //WriteSolution.Write(args[1], bestSolution, bestFitness, s.ElapsedMilliseconds, args[0]);

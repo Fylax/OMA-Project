@@ -28,6 +28,10 @@ namespace OMA_Project
 
         private void SolvePreciseTasks(int destination, int tasks, Solution movings)
         {
+            if(destination==24)
+            {
+                var x = "gne";
+            }
             int[] totUsers = problem.TotalUsers();
             bool[] usable = new bool[totUsers.Length];
             for (int i = totUsers.Length; i-- > 0;)
@@ -75,6 +79,7 @@ namespace OMA_Project
                     {
                         usable[i] = false;
                         partitioned = OptimizeSolving(tasks, usable);
+                        i = partitioned.Length -1;
                     }
                 }
             }
@@ -96,6 +101,10 @@ namespace OMA_Project
 
         private void SolveTasks(int destination, int tasks, Solution movings, HashSet<int[]> avoid)
         {
+            if(destination==24)
+            {
+                var x=10;
+            }
 
             while (tasks != 0)
             {
