@@ -7,12 +7,10 @@ namespace OMA_Project
     public class Solver
     {
         private readonly Problem problem;
-        private readonly TabuList tabuList;
 
         public Solver(Problem prob)
         {
             problem = prob;
-            tabuList = new TabuList();
         }
 
         public Solution InitialSolution()
@@ -82,7 +80,7 @@ namespace OMA_Project
             }
         }
 
-        public Solution GreedySolution()
+       /* public Solution GreedySolution()
         {
             Solution solution = new Solution(problem.Cells);
             var newTask = (int[])problem.Tasks.Clone();
@@ -94,17 +92,11 @@ namespace OMA_Project
             }
             return solution;
         }
+        */
 
-        private void SolveTasks(int destination, int tasks, Solution movings)
+        private void SolveTasks(int destination, int tasks, Solution movings, HashSet<int[]> avoid)
         {
-            HashSet<int[]> avoid = new HashSet<int[]>();
-            foreach (var m in tabuList.List)
-            {
-                if (m[1] == destination)
-                {
-                    avoid.Add(new[] { m[0], m[2], m[3] });
-                }
-            }
+
             while (tasks != 0)
             {
                 int[] minimum = problem.Matrix.GetMin(destination, problem.TasksPerUser, problem.Availability, avoid);
@@ -213,12 +205,13 @@ namespace OMA_Project
         {
             Dictionary<int, int> toBeRecomputed = new Dictionary<int, int>();
             int droppedIndex;
+            HashSet<int[]> avoid = new HashSet<int[]>();
             int counter = movings.Count * percentage / 100;
             for (int i = 0; i < counter; i++)
             {
                 droppedIndex = Program.generator.Next(movings.Count);
                 int[] tuple = movings.ElementAt(droppedIndex);
-                tabuList.Add(tuple);
+                avoid.Add(new [] {tuple[0], tuple[1], tuple[2], tuple[3]});
                 movings.Remove(tuple);
                 problem.Availability[tuple[0]][tuple[2]][tuple[3]] += tuple[4];
                 if (toBeRecomputed.ContainsKey(tuple[1]))
@@ -232,7 +225,7 @@ namespace OMA_Project
             }
             foreach (var tuple in toBeRecomputed)
             {
-                SolveTasks(tuple.Key, tuple.Value, movings);
+                SolveTasks(tuple.Key, tuple.Value, movings, avoid);
             }
         }
 

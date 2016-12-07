@@ -12,14 +12,14 @@ namespace OMA_Project
         public static Random generator = new Random();
         public static void Main(string[] args)
         {
-            Problem x = Problem.ReadFromFile(@"C:\Users\vergo\Google Drive\PoliTO - Magistrale\• 1.1 Optimization Methods and Algorithms\Assignement\Materiale\material_assignment_v2\Material_assignment\input\Co_30_1_NT_0.txt");
+            Problem x = Problem.ReadFromFile(@"D:\Dropbox\Uni Mattia\Magistrale\Primo semestre\Optimization methods and algorithms\material_assignment\Material_assignment\input\Co_100_1_T_7.txt");
 
             GC.Collect();
             RuntimeHelpers.PrepareConstrainedRegions();
             GCSettings.LatencyMode = GCLatencyMode.LowLatency;
             GC.TryStartNoGCRegion(107400000);
 
-            using (Timer r = new Timer(4850))
+            using (Timer r = new Timer(5000))
             {
                 Stopwatch s = Stopwatch.StartNew();
                 Solver solver = new Solver(x);
@@ -30,8 +30,8 @@ namespace OMA_Project
                 int bestFitness = solver.ObjectiveFunction(currentSolution);
                 int tempFitness;
 
-                const int k_0 = 20;
-                const int k_max = 70;
+                const int k_0 = 26;
+                const int k_max = 65;
 
                 int k = k_0;
 
@@ -40,7 +40,7 @@ namespace OMA_Project
                 int[][][] availabilities = x.Availability.DeepClone();
                 while (r.Enabled)
                 {
-                    if (!accepted)
+                    if (accepted)
                     {
                         availabilities = x.Availability.DeepClone();
                     }
@@ -64,6 +64,9 @@ namespace OMA_Project
                 }
                 bool feasible = bestSolution.isFeasible(x);
                 s.Stop();
+                Console.WriteLine(counter);
+                Console.WriteLine(bestFitness);
+                Console.Read();
 
                 //WriteSolution.Write(args[1], bestSolution, bestFitness, s.ElapsedMilliseconds, args[0]);
             }
