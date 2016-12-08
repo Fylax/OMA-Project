@@ -130,7 +130,7 @@ namespace OMA_Project
             {
                 var min = int.MaxValue;
                 var p = k;
-                var overBooking = int.MaxValue;
+                var overBooking = int.MinValue;
                 for (var j = 0; j < d.Length; j++)
                     if ((d[j] - d[0] < p) && usable[j])
                     {
@@ -153,8 +153,7 @@ namespace OMA_Project
                         var tempOverBooking = p;
                         for (var z = 0; z < problem.UserTypes; z++)
                             tempOverBooking -= neededUsers[z]*problem.TasksPerUser[z].Tasks;
-                        tempOverBooking *= -1;
-                        if (tempOverBooking <= overBooking)
+                        if (tempOverBooking >= overBooking)
                         {
                             min = tempMin;
                             user = tempUser;

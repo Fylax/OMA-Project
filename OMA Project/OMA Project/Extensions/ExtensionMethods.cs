@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace OMA_Project.Extensions
 {
@@ -12,28 +14,27 @@ namespace OMA_Project.Extensions
         public static int[][][] DeepClone(this int[][][] source)
         {
             var destination = new int[source.Length][][];
-
-            for (var i = source.Length; i-- > 0;)
-            {
-                destination[i] = new int[source[i].Length][];
-                for (var j = source[i].Length; j-- > 0;)
+            Parallel.For(0, source.Length,
+                i =>
                 {
-                    destination[i][j] = new int[source[i][j].Length];
-                    for (var k = source[i][j].Length; k-- > 0;)
-                        destination[i][j][k] = source[i][j][k];
-                }
-            }
+                    destination[i] = new int[source[i].Length][];
+                    for (var j = source[i].Length; j-- > source[i].Length/2;)
+                    {
+                        destination[i][j] = new int[source[i][j].Length];
+                        source[i][j].CopyTo(destination[i][j], 0);
+                    }
+                });
             return destination;
         }
 
         public static List<int[]> DeepClone(this List<int[]> source)
         {
             var destination = new List<int[]>(source.Count);
-            for (var i = 0; i < source.Count; ++i)
+            for (var i = source.Count; i-- > 0;)
             {
-                destination.Add(new int[source[i].Length]);
-                for (var j = source[i].Length; j-- > 0;)
-                    destination[i][j] = source[i][j];
+                int[] d = new int[source[i].Length];
+                source[i].CopyTo(d, 0);
+                destination.Add(d);
             }
             return destination;
         }

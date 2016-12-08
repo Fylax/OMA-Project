@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using OMA_Project.Extensions;
 
 // ReSharper disable PossibleNullReferenceException
@@ -57,19 +58,23 @@ namespace OMA_Project
         public int TotalUser(int userType)
         {
             var users = 0;
-            for (var i = Cells; i-- > 0;)
+            Parallel.For(0, Cells, i =>
+            {
                 for (var j = TimeSlots; j-- > 0;)
                     users += Availability[i][j][userType];
+            });
             return users;
         }
 
         public int[] TotalUsers()
         {
             var users = new int[UserTypes];
-            for (var i = Cells; i-- > 0;)
+            Parallel.For(0, Cells, i =>
+            {
                 for (var j = TimeSlots; j-- > 0;)
                     for (var k = UserTypes; k-- > 0;)
                         users[k] += Availability[i][j][k];
+            });
             return users;
         }
 
@@ -96,14 +101,14 @@ namespace OMA_Project
                     file.ReadLine();
                     line = file.ReadLine();
                     var tasksPerUser = Array.ConvertAll(line.Trim().Split(' '), int.Parse);
-                    var orderedTaskPerUser = tasksPerUser.Select((t, u) => new {task = t, user = u})
+                    var orderedTaskPerUser = tasksPerUser.Select((t, u) => new { task = t, user = u })
                         .OrderBy(t => t.task).ToList();
                     prob.TasksPerUser = new TaskPerUser[userTypes];
                     for (var i = 0; i < orderedTaskPerUser.Count; ++i)
                         prob.TasksPerUser[i] = new TaskPerUser(orderedTaskPerUser[i].user, orderedTaskPerUser[i].task);
 
                     // Reads and stores matrix of Matrix
-                    var iterations = unchecked(userTypes*timings);
+                    var iterations = unchecked(userTypes * timings);
                     prob.Matrix = new Costs(cells, timings, userTypes);
                     file.ReadLine();
                     for (var i = 0; i < iterations; ++i)
@@ -118,7 +123,7 @@ namespace OMA_Project
                             // legge linea matrice considerando il punto (.) come separatore decimale
                             // direttamente troncato (non arrotondato)
                             line = file.ReadLine();
-                            matrix[j] = Array.ConvertAll(line.Trim().Split(' '), cost => (int) float.Parse(cost,
+                            matrix[j] = Array.ConvertAll(line.Trim().Split(' '), cost => (int)float.Parse(cost,
                                 NumberStyles.AllowDecimalPoint,
                                 NumberFormatInfo.InvariantInfo));
                         }

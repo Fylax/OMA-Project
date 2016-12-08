@@ -39,6 +39,7 @@ namespace OMA_Project
                 var availabilities = x.Availability.DeepClone();
                 var users = x.Users;
                 while (r.Enabled)
+                {
                     try
                     {
                         if (accepted)
@@ -71,6 +72,7 @@ namespace OMA_Project
                         x.Availability = availabilities.DeepClone();
                         x.Users = users;
                     }
+                }
                 s.Stop();
 
                 WriteSolution.Write(args[1], bestSolution, bestFitness, s.ElapsedMilliseconds, args[0]);

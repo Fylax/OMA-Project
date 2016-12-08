@@ -1,4 +1,6 @@
-﻿namespace OMA_Project
+﻿using System.Threading.Tasks;
+
+namespace OMA_Project
 {
     public class Costs
     {
@@ -34,46 +36,52 @@
             var minValue = int.MaxValue;
             var minTime = 0;
             var minStart = 0;
-            for (var start = costMatrix[0].Length; start-- > 0;)
+            Parallel.For(0, costMatrix[0].Length, start =>
+            {
                 if (start != destination)
                     for (var timeSlot = costMatrix[0][0].Length; timeSlot-- > 0;)
                     {
                         var cost = costMatrix[destination][start][timeSlot][userType];
                         if ((minValue > cost) && (availableUsers[start][timeSlot][userType] != 0))
                         {
-                            if (cost == 1)
-                                return new[] {start, timeSlot};
                             minValue = cost;
                             minStart = start;
                             minTime = timeSlot;
                         }
                     }
-            return new[] {minStart, minTime};
+            });
+            return new[] { minStart, minTime };
         }
 
         public int[] GetMin(int destination, Problem problem)
         {
+            var taskPerUser = problem.TasksPerUser;
+            var availability = problem.Availability;
             var minValue = double.MaxValue;
             var minUser = 0;
             var minTime = 0;
             var minStart = 0;
-            for (var start = problem.Cells; start-- > 0;)
-                if (start != destination)
-                    for (var timeSlot = problem.TimeSlots; timeSlot-- > 0;)
-                        for (var userType = problem.UserTypes; userType-- > 0;)
-                        {
-                            var weightedCost = costMatrix[destination][start][timeSlot][userType]*
-                                               problem.TasksPerUser[problem.TasksPerUser.Length - 1].Tasks/
-                                               (double) problem.TasksPerUser[userType].Tasks;
-                            if ((minValue > weightedCost) && (problem.Availability[start][timeSlot][userType] != 0))
-                            {
-                                minValue = weightedCost;
-                                minStart = start;
-                                minTime = timeSlot;
-                                minUser = userType;
-                            }
-                        }
-            return new[] {minStart, minTime, minUser};
+            Parallel.For(0, problem.Cells,
+                start =>
+                {
+                    if (start != destination)
+                        for (var timeSlot = problem.TimeSlots; timeSlot-- > 0;)
+                            for (var userType = problem.UserTypes; userType-- > 0;)
+                                if (availability[start][timeSlot][userType] != 0)
+                                {
+                                    var weightedCost = costMatrix[destination][start][timeSlot][userType]*
+                                                       taskPerUser[problem.TasksPerUser.Length - 1].Tasks/
+                                                       (double) taskPerUser[userType].Tasks;
+                                    if (minValue > weightedCost)
+                                    {
+                                        minValue = weightedCost;
+                                        minStart = start;
+                                        minTime = timeSlot;
+                                        minUser = userType;
+                                    }
+                                }
+                });
+            return new[] { minStart, minTime, minUser };
         }
     }
 }
