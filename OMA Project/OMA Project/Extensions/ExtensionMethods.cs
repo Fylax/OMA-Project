@@ -5,31 +5,35 @@ namespace OMA_Project.Extensions
     public static class ExtensionMethods
     {
         /// <summary>
-        /// Crea una copia profonda di un array di interi a tre dimensioni
+        ///     Crea una copia profonda di un array di interi a tre dimensioni
         /// </summary>
         /// <param name="source">Array sorgente</param>
         /// <returns>Copia profonda</returns>
         public static int[][][] DeepClone(this int[][][] source)
         {
-            int[][][] destination = new int[source.Length][][];
+            var destination = new int[source.Length][][];
 
-            for (int i = 0; i < source.Length; ++i)
+            for (var i = source.Length; i-- > 0;)
             {
                 destination[i] = new int[source[i].Length][];
-                for (int j = 0; j < source[i].Length; ++j)
+                for (var j = source[i].Length; j-- > 0;)
                 {
-                    destination[i][j] = (int[])source[i][j].Clone();
+                    destination[i][j] = new int[source[i][j].Length];
+                    for (var k = source[i][j].Length; k-- > 0;)
+                        destination[i][j][k] = source[i][j][k];
                 }
             }
             return destination;
         }
 
-        public static LinkedList<int[]> DeepClone(this LinkedList<int[]> source)
+        public static List<int[]> DeepClone(this List<int[]> source)
         {
-            LinkedList<int[]> destination = new LinkedList<int[]>();
-            foreach (int[] elem in source)
+            var destination = new List<int[]>(source.Count);
+            for (var i = 0; i < source.Count; ++i)
             {
-                destination.AddLast((int[])elem.Clone());
+                destination.Add(new int[source[i].Length]);
+                for (var j = source[i].Length; j-- > 0;)
+                    destination[i][j] = source[i][j];
             }
             return destination;
         }
