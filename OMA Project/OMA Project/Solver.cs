@@ -173,12 +173,11 @@ namespace OMA_Project
 
         public void VNS(List<int[]> movings, int percentage)
         {
-            var max = movings.Count;
             var counter = movings.Count*percentage/100;
             var toBeRecomputed = new Dictionary<int, int>(counter * 4);
             for (var i = counter; i-- > 0;)
             {
-                var droppedIndex = Program.generator.Next(max);
+                var droppedIndex = Program.generator.Next(i + 1);
                 var tuple = movings[droppedIndex];
                 movings.RemoveAt(droppedIndex);
                 problem.Availability[tuple[0]][tuple[2]][tuple[3]] += tuple[4];
@@ -187,7 +186,6 @@ namespace OMA_Project
                     toBeRecomputed[tuple[1]] += tuple[5];
                 else
                     toBeRecomputed.Add(tuple[1], tuple[5]);
-                --max;
             }
             using (var enumerator = toBeRecomputed.GetEnumerator())
             {
