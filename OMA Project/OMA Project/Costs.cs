@@ -36,6 +36,7 @@ namespace OMA_Project
             var minValue = int.MaxValue;
             var minTime = 0;
             var minStart = 0;
+
             Parallel.For(0, costMatrix[0].Length, start =>
             {
                 if (start != destination)

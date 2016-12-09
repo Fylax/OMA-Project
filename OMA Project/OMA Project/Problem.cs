@@ -69,12 +69,10 @@ namespace OMA_Project
         public int[] TotalUsers()
         {
             var users = new int[UserTypes];
-            Parallel.For(0, Cells, i =>
-            {
+            for (var i = Cells; i-- > 0;)
                 for (var j = TimeSlots; j-- > 0;)
                     for (var k = UserTypes; k-- > 0;)
                         users[k] += Availability[i][j][k];
-            });
             return users;
         }
 

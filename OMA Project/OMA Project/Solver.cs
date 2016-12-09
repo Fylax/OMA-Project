@@ -86,7 +86,7 @@ namespace OMA_Project
                 var available = problem.Availability[minimum[0]][minimum[1]][minimum[2]];
                 if (available*problem.TasksPerUser[minimum[2]].Tasks >= tasks)
                 {
-                    var used = (int) Math.Ceiling(tasks/(double) problem.TasksPerUser[minimum[2]].Tasks);
+                    var used = 32768 - (int)(32768d - (tasks / (double)problem.TasksPerUser[minimum[2]].Tasks)); // shift based ceiling function (way faster than Math.Ceiling)
                     problem.Availability[minimum[0]][minimum[1]][minimum[2]] -= used;
                     problem.Users -= used;
                     movings.Add(new[] {minimum[0], destination, minimum[1], minimum[2], used, tasks});
@@ -121,10 +121,9 @@ namespace OMA_Project
             s[0] = 0;
 
 
-            for (var k = 1; k <= tasks; k++)
+            for (var p = 1; p <= tasks; p++)
             {
                 var min = int.MaxValue;
-                var p = k;
                 var overBooking = int.MinValue;
                 for (var j = 0; j < d.Length; j++)
                     if ((d[j] - d[0] < p) && usable[j])
@@ -155,8 +154,8 @@ namespace OMA_Project
                             overBooking = tempOverBooking;
                         }
                     }
-                c[k] = min;
-                s[k] = user;
+                c[p] = min;
+                s[p] = user;
             }
             return UsersNeeded(tasks, s);
         }
@@ -174,12 +173,13 @@ namespace OMA_Project
 
         public void VNS(List<int[]> movings, int percentage)
         {
-            var toBeRecomputed = new Dictionary<int, int>();
+            var max = movings.Count;
             var counter = movings.Count*percentage/100;
-            for (var i = 0; i < counter; i++)
+            var toBeRecomputed = new Dictionary<int, int>(counter * 4);
+            for (var i = counter; i-- > 0;)
             {
-                var droppedIndex = Program.generator.Next(movings.Count);
-                var tuple = movings.ElementAt(droppedIndex);
+                var droppedIndex = Program.generator.Next(max);
+                var tuple = movings[droppedIndex];
                 movings.RemoveAt(droppedIndex);
                 problem.Availability[tuple[0]][tuple[2]][tuple[3]] += tuple[4];
                 problem.Users += tuple[4];
@@ -187,6 +187,7 @@ namespace OMA_Project
                     toBeRecomputed[tuple[1]] += tuple[5];
                 else
                     toBeRecomputed.Add(tuple[1], tuple[5]);
+                --max;
             }
             using (var enumerator = toBeRecomputed.GetEnumerator())
             {

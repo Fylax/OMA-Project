@@ -18,7 +18,7 @@ namespace OMA_Project.Extensions
                 i =>
                 {
                     destination[i] = new int[source[i].Length][];
-                    for (var j = source[i].Length; j-- > source[i].Length/2;)
+                    for (var j = source[i].Length; j-- > 0;)
                     {
                         destination[i][j] = new int[source[i][j].Length];
                         source[i][j].CopyTo(destination[i][j], 0);
@@ -30,12 +30,15 @@ namespace OMA_Project.Extensions
         public static List<int[]> DeepClone(this List<int[]> source)
         {
             var destination = new List<int[]>(source.Count);
-            for (var i = source.Count; i-- > 0;)
+            Parallel.For(0, source.Count, i =>
             {
                 int[] d = new int[source[i].Length];
                 source[i].CopyTo(d, 0);
-                destination.Add(d);
-            }
+                lock (destination)
+                {
+                    destination.Add(d);
+                }
+            });
             return destination;
         }
     }

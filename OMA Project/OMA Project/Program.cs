@@ -13,14 +13,16 @@ namespace OMA_Project
 
         public static void Main(string[] args)
         {
-            var x = Problem.ReadFromFile(args[0]);
+            System.Diagnostics.Process assignement = System.Diagnostics.Process.GetCurrentProcess();
+            assignement.PriorityClass = System.Diagnostics.ProcessPriorityClass.High;
 
+            var x = Problem.ReadFromFile(args[0]);
             GC.Collect();
             RuntimeHelpers.PrepareConstrainedRegions();
             GCSettings.LatencyMode = GCLatencyMode.LowLatency;
             GC.TryStartNoGCRegion(107400000);
 
-            using (var r = new Timer(5000))
+            using (var r = new Timer(5050))
             {
                 var s = Stopwatch.StartNew();
                 var solver = new Solver(x);
@@ -30,8 +32,8 @@ namespace OMA_Project
                 var bestSolution = currentSolution.DeepClone();
                 var bestFitness = solver.ObjectiveFunction(currentSolution);
 
-                const int k_0 = 30;
-                const int k_max = 80;
+                const int k_0 = 5;
+                const int k_max = 25;
 
                 var k = k_0;
 
