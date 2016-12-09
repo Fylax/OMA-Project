@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace OMA_Project
 {
@@ -16,17 +17,16 @@ namespace OMA_Project
         public List<int[]> InitialSolution()
         {
             var solution = new List<int[]>();
-            var newTask = (int[]) problem.Tasks.Clone();
-            var orderedTask = newTask.Select((t, c) => new {cell = c, task = t})
+            var orderedTask = problem.Tasks.Select((t, c) => new {cell = c, task = t})
                 .Where(t => t.task != 0).OrderBy(t => t.task).ToArray();
+            int[] totalUsers = problem.TotalUsers();
             for (var i = orderedTask.Length; i-- > 0;)
-                SolvePreciseTasks(orderedTask[i].cell, orderedTask[i].task, solution);
+                SolvePreciseTasks(orderedTask[i].cell, orderedTask[i].task, solution, totalUsers);
             return solution;
         }
 
-        private void SolvePreciseTasks(int destination, int tasks, List<int[]> movings)
+        private void SolvePreciseTasks(int destination, int tasks, List<int[]> movings, int[] totUsers)
         {
-            var totUsers = problem.TotalUsers();
             var usable = new bool[totUsers.Length];
             for (var i = totUsers.Length; i-- > 0;)
                 if (totUsers[i] != 0)
@@ -45,6 +45,7 @@ namespace OMA_Project
                         tasks -= partitioned[i]*problem.TasksPerUser[i].Tasks;
                         problem.Availability[minimum[0]][minimum[1]][i] -= partitioned[i];
                         problem.Users -= partitioned[i];
+                        totUsers[i] -= partitioned[i];
                         movings.Add(new[]
                         {
                             minimum[0], destination, minimum[1], i, partitioned[i], doneTasks
@@ -60,12 +61,13 @@ namespace OMA_Project
                         partitioned[i] -= available;
                         problem.Availability[minimum[0]][minimum[1]][i] -= available;
                         problem.Users -= available;
+                        totUsers[i] -= available;
                         movings.Add(new[]
                         {
                             minimum[0], destination, minimum[1], i, available, doneTasks
                         });
                     }
-                    if (problem.TotalUser(i) == 0)
+                    if (totUsers[i] == 0)
                     {
                         usable[i] = false;
                         partitioned = OptimizeSolving(tasks, usable);
@@ -104,16 +106,9 @@ namespace OMA_Project
             }
         }
 
-        public int ObjectiveFunction(List<int[]> solution)
-        {
-            var sum = 0;
-            for (var i = solution.Count; i-- > 0;)
-                sum += problem.Matrix.GetCost(solution[i][2], solution[i][3],
-                           solution[i][0], solution[i][1])*solution[i][4];
-            return sum;
-        }
+        public int ObjectiveFunction(IEnumerable<int[]> solution) => solution.Sum(t => problem.Matrix.GetCost(t[2], t[3], t[0], t[1])*t[4]);
 
-        private int[] OptimizeSolving(int tasks, bool[] usable)
+        private int[] OptimizeSolving(int tasks, IReadOnlyList<bool> usable)
         {
             var d = new int[problem.UserTypes];
             for (var i = 0; i < 3; i++)
