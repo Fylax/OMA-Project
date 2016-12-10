@@ -10,27 +10,27 @@ namespace OMA_Project
     internal static class Program
     {
         public static readonly Random generator = new Random();
-
+        public static Problem problem;
         public static void Main(string[] args)
         {
-            System.Diagnostics.Process assignement = System.Diagnostics.Process.GetCurrentProcess();
-            assignement.PriorityClass = System.Diagnostics.ProcessPriorityClass.High;
+            Process assignement = Process.GetCurrentProcess();
+            assignement.PriorityClass = ProcessPriorityClass.High;
 
-            var x = Problem.ReadFromFile(args[0]);
+            problem = Problem.ReadFromFile(args[0]);
             GC.Collect();
             RuntimeHelpers.PrepareConstrainedRegions();
-            GCSettings.LatencyMode = GCLatencyMode.LowLatency;
-            GC.TryStartNoGCRegion(107400000);
+            GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
+            GC.TryStartNoGCRegion(174000000);
 
-            using (var r = new Timer(5050))
+            using (var r = new Timer(5000))
             {
                 var s = Stopwatch.StartNew();
-                var solver = new Solver(x);
+                var solver = new Solver();
                 r.Elapsed += Callback;
                 r.Enabled = true;
                 var currentSolution = solver.InitialSolution();
                 var bestSolution = currentSolution.DeepClone();
-                var bestFitness = solver.ObjectiveFunction(currentSolution);
+                var bestFitness = Solver.ObjectiveFunction(currentSolution);
 
                 const int k_0 = 5;
                 const int k_max = 25;
@@ -38,19 +38,19 @@ namespace OMA_Project
                 var k = k_0;
 
                 var accepted = false;
-                var availabilities = x.Availability.DeepClone();
-                var users = x.Users;
+                var availabilities = problem.Availability.DeepClone();
+                var users = problem.Users;
                 while (r.Enabled)
                 {
                     try
                     {
                         if (accepted)
                         {
-                            availabilities = x.Availability.DeepClone();
-                            users = x.Users;
+                            availabilities = problem.Availability.DeepClone();
+                            users = problem.Users;
                         }
-                        solver.VNS(currentSolution, k);
-                        var tempFitness = solver.ObjectiveFunction(currentSolution);
+                        currentSolution = solver.VNS(currentSolution, k);
+                        var tempFitness = Solver.ObjectiveFunction(currentSolution);
                         if (tempFitness < bestFitness)
                         {
                             accepted = true;
@@ -63,21 +63,21 @@ namespace OMA_Project
                             accepted = false;
                             k = k == k_max ? k_0 : k + 1;
                             currentSolution = bestSolution.DeepClone();
-                            x.Availability = availabilities.DeepClone();
-                            x.Users = users;
+                            problem.Availability = availabilities.DeepClone();
+                            problem.Users = users;
                         }
                     }
                     catch (NoUserLeft)
                     {
                         accepted = false;
                         currentSolution = bestSolution.DeepClone();
-                        x.Availability = availabilities.DeepClone();
-                        x.Users = users;
+                        problem.Availability = availabilities.DeepClone();
+                        problem.Users = users;
                     }
                 }
                 s.Stop();
 
-                WriteSolution.Write(args[1], bestSolution, bestFitness, s.ElapsedMilliseconds, args[0]);
+                //WriteSolution.Write(args[1], bestSolution, bestFitness, s.ElapsedMilliseconds, args[0]);
             }
         }
 

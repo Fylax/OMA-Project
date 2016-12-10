@@ -1,11 +1,12 @@
-﻿using System.Threading.Tasks;
+﻿using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace OMA_Project
 {
     public class Costs
     {
         private readonly int[][][][] costMatrix;
-        private object sync = new object();
+        private readonly object sync = new object();
 
         public Costs(int numCells, int timeSlots, int userTypes)
         {
@@ -29,6 +30,7 @@ namespace OMA_Project
                     costMatrix[i][j][timeSlot][userType] = matrix[j][i];
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int GetCost(int timeSlot, int userType, int start, int destination)
             => costMatrix[destination][start][timeSlot][userType];
 
@@ -40,18 +42,18 @@ namespace OMA_Project
 
             Parallel.For(0, costMatrix[0].Length, start =>
             {
-                if (start != destination)
-                    for (var timeSlot = costMatrix[0][0].Length; timeSlot-- > 0;)
+                if (start == destination) return;
+                for (var timeSlot = costMatrix[0][0].Length; timeSlot-- > 0;)
+                {
+                    var cost = costMatrix[destination][start][timeSlot][userType];
+                    if (minValue <= cost || availableUsers[start][timeSlot][userType] == 0) continue;
+                    lock (sync)
                     {
-                        var cost = costMatrix[destination][start][timeSlot][userType];
-                        if (minValue > cost && availableUsers[start][timeSlot][userType] != 0)
-                            lock (sync)
-                            {
-                                minValue = cost;
-                                minStart = start;
-                                minTime = timeSlot;
-                            }
+                        minValue = cost;
+                        minStart = start;
+                        minTime = timeSlot;
                     }
+                }
             });
             return new[] { minStart, minTime };
         }
@@ -67,22 +69,22 @@ namespace OMA_Project
             Parallel.For(0, problem.Cells,
                 start =>
                 {
-                    if (start != destination)
-                        for (var timeSlot = problem.TimeSlots; timeSlot-- > 0;)
+                    if (start == destination) return;
+                    for (var timeSlot = problem.TimeSlots; timeSlot-- > 0;)
                             for (var userType = problem.UserTypes; userType-- > 0;)
                                 if (availability[start][timeSlot][userType] != 0)
                                 {
                                     var weightedCost = costMatrix[destination][start][timeSlot][userType] *
                                                        taskPerUser[problem.TasksPerUser.Length - 1].Tasks /
                                                        (double)taskPerUser[userType].Tasks;
-                                    if (minValue > weightedCost)
-                                        lock (sync)
-                                        {
-                                            minValue = weightedCost;
-                                            minStart = start;
-                                            minTime = timeSlot;
-                                            minUser = userType;
-                                        }
+                                    if (minValue <= weightedCost) continue;
+                                    lock (sync)
+                                    {
+                                        minValue = weightedCost;
+                                        minStart = start;
+                                        minTime = timeSlot;
+                                        minUser = userType;
+                                    }
                                 }
                 });
             return new[] { minStart, minTime, minUser };

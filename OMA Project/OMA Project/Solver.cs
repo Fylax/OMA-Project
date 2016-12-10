@@ -1,31 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using static OMA_Project.Program;
 
 namespace OMA_Project
 {
     public class Solver
     {
-        private readonly Problem problem;
-
-        public Solver(Problem prob)
+        public List<int> InitialSolution()
         {
-            problem = prob;
-        }
-
-        public List<int[]> InitialSolution()
-        {
-            var solution = new List<int[]>();
+            var solution = new List<int>(500);
             var orderedTask = problem.Tasks.Select((t, c) => new {cell = c, task = t})
                 .Where(t => t.task != 0).OrderBy(t => t.task).ToArray();
             int[] totalUsers = problem.TotalUsers();
             for (var i = orderedTask.Length; i-- > 0;)
-                SolvePreciseTasks(orderedTask[i].cell, orderedTask[i].task, solution, totalUsers);
+                SolvePreciseTasks(solution, totalUsers, orderedTask[i].cell, orderedTask[i].task);
             return solution;
         }
 
-        private void SolvePreciseTasks(int destination, int tasks, List<int[]> movings, int[] totUsers)
+        private void SolvePreciseTasks(List<int> movings, int[] totUsers, int destination, int tasks)
         {
             var usable = new bool[totUsers.Length];
             for (var i = totUsers.Length; i-- > 0;)
@@ -46,10 +38,12 @@ namespace OMA_Project
                         problem.Availability[minimum[0]][minimum[1]][i] -= partitioned[i];
                         problem.Users -= partitioned[i];
                         totUsers[i] -= partitioned[i];
-                        movings.Add(new[]
-                        {
-                            minimum[0], destination, minimum[1], i, partitioned[i], doneTasks
-                        });
+                        movings.Add(minimum[0]); //start
+                        movings.Add(destination); //destination
+                        movings.Add(minimum[1]); //timeslot
+                        movings.Add(i); //usertype
+                        movings.Add(partitioned[i]); //usernumber
+                        movings.Add(doneTasks); //perfomed tasks
                         partitioned[i] = 0;
                     }
                     else
@@ -62,10 +56,12 @@ namespace OMA_Project
                         problem.Availability[minimum[0]][minimum[1]][i] -= available;
                         problem.Users -= available;
                         totUsers[i] -= available;
-                        movings.Add(new[]
-                        {
-                            minimum[0], destination, minimum[1], i, available, doneTasks
-                        });
+                        movings.Add(minimum[0]); //start
+                        movings.Add(destination); //destination
+                        movings.Add(minimum[1]); //timeslot
+                        movings.Add(i); //usertype
+                        movings.Add(available); //usernumber
+                        movings.Add(doneTasks); //perfomed tasks
                     }
                     if (totUsers[i] == 0)
                     {
@@ -76,7 +72,7 @@ namespace OMA_Project
                 }
         }
 
-        private void SolveTasks(int destination, int tasks, List<int[]> movings)
+        private void SolveTasks(List<int> movings, int destination, int tasks)
         {
             while (tasks != 0)
             {
@@ -89,7 +85,12 @@ namespace OMA_Project
                     var used = 32768 - (int)(32768d - (tasks / (double)problem.TasksPerUser[minimum[2]].Tasks)); // shift based ceiling function (way faster than Math.Ceiling)
                     problem.Availability[minimum[0]][minimum[1]][minimum[2]] -= used;
                     problem.Users -= used;
-                    movings.Add(new[] {minimum[0], destination, minimum[1], minimum[2], used, tasks});
+                    movings.Add(minimum[0]); //start
+                    movings.Add(destination); //destination
+                    movings.Add(minimum[1]); //timeslot
+                    movings.Add(minimum[2]); //usertype
+                    movings.Add(used); //used users
+                    movings.Add(tasks); //performed tasks
                     tasks = 0;
                 }
                 else
@@ -97,29 +98,38 @@ namespace OMA_Project
                     problem.Availability[minimum[0]][minimum[1]][minimum[2]] -= available;
                     problem.Users -= available;
                     tasks = tasks - available*problem.TasksPerUser[minimum[2]].Tasks;
-                    movings.Add(new[]
-                    {
-                        minimum[0], destination, minimum[1], minimum[2], available,
-                        available*problem.TasksPerUser[minimum[2]].Tasks
-                    });
+                    movings.Add(minimum[0]); //start
+                    movings.Add(destination); //destination
+                    movings.Add(minimum[1]); //timeslot
+                    movings.Add(minimum[2]); //usertype
+                    movings.Add(available); //used users
+                    movings.Add(available * problem.TasksPerUser[minimum[2]].Tasks); //performed tasks
                 }
             }
         }
 
-        public int ObjectiveFunction(IEnumerable<int[]> solution) => solution.Sum(t => problem.Matrix.GetCost(t[2], t[3], t[0], t[1])*t[4]);
+        public static int ObjectiveFunction(List<int> solution)
+        {
+            int sum = 0;
+            int times = solution.Count;
+            for (int i = times; (i -= 6) >= 0;)
+            {
+                sum = sum + problem.Matrix.GetCost(solution[i+2], solution[i+3],
+                    solution[i], solution[i+1]) * solution[i+4];
+
+            }
+            return sum;
+        }
 
         private int[] OptimizeSolving(int tasks, IReadOnlyList<bool> usable)
         {
             var d = new int[problem.UserTypes];
-            for (var i = 0; i < 3; i++)
+            for (var i = problem.UserTypes; i-- > 0;)
                 d[i] = problem.TasksPerUser[i].Tasks;
 
             var user = 0;
             var c = new int[tasks + 1];
             var s = new int[tasks + 1];
-            c[0] = 0;
-            s[0] = 0;
-
 
             for (var p = 1; p <= tasks; p++)
             {
@@ -145,7 +155,7 @@ namespace OMA_Project
                         else break;
                         var neededUsers = UsersNeeded(p, s);
                         var tempOverBooking = p;
-                        for (var z = 0; z < problem.UserTypes; z++)
+                        for (var z = problem.UserTypes; z-- > 0;)
                             tempOverBooking -= neededUsers[z]*problem.TasksPerUser[z].Tasks;
                         if (tempOverBooking >= overBooking)
                         {
@@ -160,7 +170,7 @@ namespace OMA_Project
             return UsersNeeded(tasks, s);
         }
 
-        private int[] UsersNeeded(int tasks, IReadOnlyList<int> s)
+        private static int[] UsersNeeded(int tasks, IReadOnlyList<int> s)
         {
             var returns = new int[problem.UserTypes];
             for (var i = tasks; i > 0;)
@@ -171,27 +181,47 @@ namespace OMA_Project
             return returns;
         }
 
-        public void VNS(List<int[]> movings, int percentage)
+        public List<int> VNS(List<int> movings, int percentage)
         {
-            var counter = movings.Count*percentage/100;
-            var toBeRecomputed = new Dictionary<int, int>(counter * 4);
+            var counter = movings.Count*percentage/500;
+            var toBeRecomputed = new Dictionary<int, int>(counter * 10);
+            var toBeDropped = new bool[movings.Count];
             for (var i = counter; i-- > 0;)
             {
-                var droppedIndex = Program.generator.Next(i + 1);
-                var tuple = movings[droppedIndex];
-                movings.RemoveAt(droppedIndex);
-                problem.Availability[tuple[0]][tuple[2]][tuple[3]] += tuple[4];
-                problem.Users += tuple[4];
-                if (toBeRecomputed.ContainsKey(tuple[1]))
-                    toBeRecomputed[tuple[1]] += tuple[5];
+                int droppedIndex;
+                do
+                {
+                    droppedIndex = generator.Next(movings.Count / 6);
+                } while (toBeDropped[droppedIndex * 6]);
+                droppedIndex *= 6;
+                toBeDropped[droppedIndex] = true;
+                problem.Availability[movings[droppedIndex]][movings[droppedIndex+2]][movings[droppedIndex+3]] += movings[droppedIndex+4];
+                problem.Users += movings[droppedIndex+4];
+                if (toBeRecomputed.ContainsKey(movings[droppedIndex+1]))
+                    toBeRecomputed[movings[droppedIndex+1]] += movings[droppedIndex+5];
                 else
-                    toBeRecomputed.Add(tuple[1], tuple[5]);
+                    toBeRecomputed.Add(movings[droppedIndex+1], movings[droppedIndex+5]);
             }
+            var tempList = new List<int>(movings.Count);
+            for (var i =0; i < movings.Count; i+=6)
+            {
+                if (!toBeDropped[i])
+                {
+                    tempList.Add(movings[i]);
+                    tempList.Add(movings[i+1]);
+                    tempList.Add(movings[i+2]);
+                    tempList.Add(movings[i+3]);
+                    tempList.Add(movings[i+4]);
+                    tempList.Add(movings[i+5]);
+                }
+            }
+            movings = tempList;
             using (var enumerator = toBeRecomputed.GetEnumerator())
             {
                 while (enumerator.MoveNext())
-                    SolveTasks(enumerator.Current.Key, enumerator.Current.Value, movings);
+                    SolveTasks(movings, enumerator.Current.Key, enumerator.Current.Value);
             }
+            return movings;
         }
     }
 }

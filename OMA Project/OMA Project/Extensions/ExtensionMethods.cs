@@ -21,24 +21,24 @@ namespace OMA_Project.Extensions
                     for (var j = source[i].Length; j-- > 0;)
                     {
                         destination[i][j] = new int[source[i][j].Length];
-                        source[i][j].CopyTo(destination[i][j], 0);
+                        // Buffer.BlockCopy instead of Array.Copy as it looks at data as a byte stream
+                        // ignoring types and occasional exception. Plus it relies on a C/C++
+                        // underlying implementation that makes it run way faster.
+                        // 4 * length as each int is 4 byte long
+                        Buffer.BlockCopy(source[i][j], 0, destination[i][j], 0, 4 * source[i][j].Length);
                     }
                 });
             return destination;
         }
 
-        public static List<int[]> DeepClone(this List<int[]> source)
+        public static List<int> DeepClone(this List<int> source)
         {
-            var destination = new List<int[]>(source.Count);
-            Parallel.For(0, source.Count, i =>
+            var destination = new List<int>(source.Capacity);
+            var sCount = source.Count;
+            for (int i = 0; i < sCount; ++i)
             {
-                int[] d = new int[source[i].Length];
-                source[i].CopyTo(d, 0);
-                lock (destination)
-                {
-                    destination.Add(d);
-                }
-            });
+                destination.Add(source[i]);
+            }
             return destination;
         }
     }
