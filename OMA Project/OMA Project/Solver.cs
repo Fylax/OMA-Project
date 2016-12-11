@@ -4,7 +4,7 @@ using static OMA_Project.Program;
 
 namespace OMA_Project
 {
-    public class Solver
+    public static class Solver
     {
         public static List<int> InitialSolution()
         {
@@ -19,7 +19,14 @@ namespace OMA_Project
 
         private static void SolvePreciseTasks(List<int> movings, int[] totUsers, int destination, int tasks)
         {
-            var usable = new bool[problem.UserTypes];
+            // Optimization block (not really required, just more readability ed enforced inling)
+            var costs = problem.Matrix;
+            var tasksPerUser = problem.TasksPerUser;
+            var availability = problem.Availability;
+            var timeSlots = problem.TimeSlots;
+            var userTypes = problem.UserTypes;
+            // end optimization block;
+            var usable = new bool[userTypes];
             for (var i = totUsers.Length; i-- > 0;)
                 if (totUsers[i] != 0)
                     usable[i] = true;
@@ -27,16 +34,16 @@ namespace OMA_Project
             for (var i = partitioned.Length; i-- > 0;)
                 while (partitioned[i] != 0)
                 {
-                    var minimum = problem.Matrix.GetMin(destination, i);
+                    var minimum = costs.GetMin(destination, i);
                     var available =
-                        problem.Availability[(minimum[0] * problem.TimeSlots + minimum[1]) * problem.UserTypes + i];
+                        availability[(minimum[0] * timeSlots + minimum[1]) * userTypes + i];
                     if (available >= partitioned[i])
                     {
-                        var doneTasks = tasks < problem.TasksPerUser[i].Tasks * partitioned[i]
+                        var doneTasks = tasks < tasksPerUser[i].Tasks * partitioned[i]
                             ? tasks
-                            : partitioned[i] * problem.TasksPerUser[i].Tasks;
-                        tasks -= partitioned[i] * problem.TasksPerUser[i].Tasks;
-                        problem.Availability[(minimum[0] * problem.TimeSlots + minimum[1]) * problem.UserTypes + i] -=
+                            : partitioned[i] * tasksPerUser[i].Tasks;
+                        tasks -= partitioned[i] * tasksPerUser[i].Tasks;
+                        availability[(minimum[0] * timeSlots + minimum[1]) * userTypes + i] -=
                             partitioned[i];
                         problem.Users -= partitioned[i];
                         totUsers[i] -= partitioned[i];
@@ -50,12 +57,12 @@ namespace OMA_Project
                     }
                     else
                     {
-                        var doneTasks = tasks < problem.TasksPerUser[i].Tasks * partitioned[i]
+                        var doneTasks = tasks < tasksPerUser[i].Tasks * partitioned[i]
                             ? tasks
-                            : available * problem.TasksPerUser[i].Tasks;
-                        tasks -= available * problem.TasksPerUser[i].Tasks;
+                            : available * tasksPerUser[i].Tasks;
+                        tasks -= available * tasksPerUser[i].Tasks;
                         partitioned[i] -= available;
-                        problem.Availability[(minimum[0] * problem.TimeSlots + minimum[1]) * problem.UserTypes + i] -=
+                        availability[(minimum[0] * timeSlots + minimum[1]) * userTypes + i] -=
                             available;
                         problem.Users -= available;
                         totUsers[i] -= available;
@@ -127,9 +134,13 @@ namespace OMA_Project
 
         private static int[] OptimizeSolving(int tasks, IReadOnlyList<bool> usable)
         {
-            var d = new int[problem.UserTypes];
-            for (var i = problem.UserTypes; i-- > 0;)
-                d[i] = problem.TasksPerUser[i].Tasks;
+            // Optimization block (not really required, just more readability ed enforced inling)
+            var tasksPerUser = problem.TasksPerUser;
+            var userTypes = problem.UserTypes;
+            // end optimization block
+            var d = new int[userTypes];
+            for (var i = userTypes; i-- > 0;)
+                d[i] = tasksPerUser[i].Tasks;
 
             var user = 0;
             var c = new int[tasks + 1];
@@ -147,20 +158,20 @@ namespace OMA_Project
                         if (p - d[j] < 0)
                         {
                             tempMin = 1;
-                            tempUser = problem.TasksPerUser[j].UserType;
+                            tempUser = tasksPerUser[j].UserType;
                         }
 
                         else if (1 + c[p - d[j]] < min)
                         {
                             tempMin = 1 + c[p - d[j]];
-                            tempUser = problem.TasksPerUser[j].UserType;
+                            tempUser = tasksPerUser[j].UserType;
                         }
 
                         else break;
                         var neededUsers = UsersNeeded(p, s);
                         var tempOverBooking = p;
-                        for (var z = problem.UserTypes; z-- > 0;)
-                            tempOverBooking -= neededUsers[z] * problem.TasksPerUser[z].Tasks;
+                        for (var z = userTypes; z-- > 0;)
+                            tempOverBooking -= neededUsers[z] * tasksPerUser[z].Tasks;
                         if (tempOverBooking < overBooking) continue;
                         min = tempMin;
                         user = tempUser;
@@ -174,11 +185,12 @@ namespace OMA_Project
 
         private static int[] UsersNeeded(int tasks, IReadOnlyList<int> s)
         {
+            var tasksPerUser = problem.TasksPerUser; // just optimization
             var returns = new int[problem.UserTypes];
             for (var i = tasks; i > 0;)
             {
                 returns[s[i]]++;
-                i -= problem.TasksPerUser[s[i]].Tasks;
+                i -= tasksPerUser[s[i]].Tasks;
             }
             return returns;
         }
@@ -238,8 +250,15 @@ namespace OMA_Project
         /// <returns></returns>
         public static List<int> GRASP(Dictionary<int, Dictionary<int, int>> requiredUsers)
         {
+            // Optimization block (not really required, just more readability ed enforced inling)
+            var costs = problem.Matrix;
+            var availability = problem.Availability;
+            var cells = problem.Cells;
+            var userTypes = problem.UserTypes;
+            var timeSlots = problem.UserTypes;
+            // end optimization block
             List<int> movings = new List<int>(600);
-            int totCell = problem.Cells;
+            int totCell = cells;
             bool[] visited = new bool[totCell];
             bool allVisited = false;
             for (int i = totCell; --i >= 0;)
@@ -258,17 +277,17 @@ namespace OMA_Project
                 var required = new Dictionary<int, int>(requiredUsers[cell]);
                 // End clone
                 var tasks = problem.Tasks[cell];
-                for (int userType = problem.UserTypes; userType-- > 0;)
+                for (int userType = userTypes; userType-- > 0;)
                     while (required.ContainsKey(userType) && required[userType] != 0)
                     {
                         if (problem.Users == 0)
                             throw new NoUserLeft();
-                        var minimum = problem.Matrix.GetMin(cell, userType);
+                        var minimum = costs.GetMin(cell, userType);
                         var available =
-                            problem.Availability[(minimum[0] * problem.TimeSlots + minimum[1]) * problem.UserTypes + userType];
+                            availability[(minimum[0] * timeSlots + minimum[1]) * userTypes + userType];
                         if (available >= required[userType])
                         {
-                            problem.Availability[(minimum[0] * problem.TimeSlots + minimum[1]) * problem.UserTypes + userType] -= required[userType];
+                            availability[(minimum[0] * timeSlots + minimum[1]) * userTypes + userType] -= required[userType];
                             problem.Users -= required[userType];
                             movings.Add(minimum[0]); //start
                             movings.Add(cell); //destination
@@ -280,7 +299,7 @@ namespace OMA_Project
                         }
                         else
                         {
-                            problem.Availability[(minimum[0] * problem.TimeSlots + minimum[1]) * problem.UserTypes +userType] -=
+                            availability[(minimum[0] * timeSlots + minimum[1]) * userTypes +userType] -=
                                 available;
                             problem.Users -= available;
                             tasks -= available * problem.TasksPerUser[userType].Tasks;

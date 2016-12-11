@@ -27,7 +27,6 @@ namespace OMA_Project
             using (var r = new Timer(5000))
             {
                 var s = Stopwatch.StartNew();
-                var solver = new Solver();
                 r.Elapsed += Callback;
                 r.Enabled = true;
                 var currentSolution = Solver.InitialSolution();

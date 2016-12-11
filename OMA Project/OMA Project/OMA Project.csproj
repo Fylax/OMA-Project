@@ -86,7 +86,6 @@
   <ItemGroup>
     <Compile Include="Costs.cs" />
     <Compile Include="Extensions\ExtensionMethods.cs" />
-    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="NoUserLeft.cs" />
     <Compile Include="Problem.cs" />
     <Compile Include="Program.cs" />
