@@ -5,10 +5,10 @@ namespace OMA_Project
 {
     public static class Solution
     {
-        public static bool IsFeasible(List<int[]> Movings, Problem x)
+        public static bool IsFeasible(List<int[]> Movings)
         {
-            var tasks = (int[]) x.Tasks.Clone();
-            var availabilities = x.immutableAvailability.DeepClone();
+            var tasks = (int[]) Program.problem.Tasks.Clone();
+            var availabilities = Program.problem.ImmutableAvailability.DeepClone();
 
             for (var i = Movings.Count; i-- > 0;)
             {
@@ -16,19 +16,21 @@ namespace OMA_Project
                     return false; //Soluzione unfeasible
 
                 tasks[Movings[i][1]] -= Movings[i][5];
-                    //Aggiorna i task da fare rimuovendo quelli svolti dal vettore soluzione considerato
-                availabilities[Movings[i][0]][Movings[i][2]][Movings[i][3]] -= Movings[i][4];
-                    //Aggiorna le disponibilità per la cella di partenza, per un certo timeslot, per un certo tipo utente
+                //Aggiorna i task da fare rimuovendo quelli svolti dal vettore soluzione considerato
+                availabilities[
+                        (Movings[i][0]*Program.problem.TimeSlots + Movings[i][2])*Program.problem.UserTypes + Movings[i][3]]
+                    -= Movings[i][4];
+                //Aggiorna le disponibilità per la cella di partenza, per un certo timeslot, per un certo tipo utente
             }
 
-            for (var i = tasks.Length; i-- > 0;)
+            for (var i = Program.problem.Cells; i-- > 0;)
                 if (tasks[i] > 0)
                     return false;
 
-            for (var i = availabilities.Length; i-- > 0;)
-                for (var j = availabilities[0].Length; j-- > 0;)
-                    for (var k = availabilities[0][0].Length; k-- > 0;)
-                        if (availabilities[i][j][k] < 0)
+            for (var i = Program.problem.Cells; i-- > 0;)
+                for (var j = Program.problem.TimeSlots; j-- > 0;)
+                    for (var k = Program.problem.UserTypes; k-- > 0;)
+                        if (availabilities[(i*Program.problem.TimeSlots + j)*Program.problem.UserTypes + k] < 0)
                             //Se la disponibilità di utenti in cella i, timeslot j e tipoutente k è negativa
                             return false;
             return true;

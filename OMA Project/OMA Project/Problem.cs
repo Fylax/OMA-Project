@@ -4,7 +4,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using OMA_Project.Extensions;
 
 // ReSharper disable PossibleNullReferenceException
@@ -13,8 +12,8 @@ namespace OMA_Project
 {
     public class Problem
     {
-        public int[][][] immutableAvailability;
-
+        public int[] ImmutableAvailability { get; private set; }
+        public int ImmutableUsers { get; private set; }
         private Problem(int cells, int timeSlots, int users)
         {
             Cells = cells;
@@ -22,12 +21,6 @@ namespace OMA_Project
             UserTypes = users;
         }
 
-        /// <summary>
-        ///     c_{ij}^{tm}
-        ///     Dizionario (lista chiave-Valore):
-        ///     * chiave = coppia ordinata (Tipo Utente, Time Slot)
-        ///     * valore = matrice dei costi corrispondente
-        /// </summary>
         public Costs Matrix { get; private set; }
 
         public int Cells { get; }
@@ -44,27 +37,9 @@ namespace OMA_Project
         /// </summary>
         public TaskPerUser[] TasksPerUser { get; private set; }
 
-        /// <summary>
-        ///     Dizionario (lista chiave-Valore):
-        ///     <list type="bullet">
-        ///         <item>chiave = coppia ordinata (Tipo Utente, Time Slot)</item>
-        ///         <item>valore = utenti disponibili per cella</item>
-        ///     </list>
-        /// </summary>
-        public int[][][] Availability { get; set; }
+        public int[] Availability { get; set; }
 
         public int Users { get; set; }
-
-        public int TotalUser(int userType)
-        {
-            var users = 0;
-            Parallel.For(0, Cells, i =>
-            {
-                for (var j = TimeSlots; j-- > 0;)
-                    users += Availability[i][j][userType];
-            });
-            return users;
-        }
 
         public int[] TotalUsers()
         {
@@ -72,7 +47,7 @@ namespace OMA_Project
             for (var i = Cells; i-- > 0;)
                 for (var j = TimeSlots; j-- > 0;)
                     for (var k = UserTypes; k-- > 0;)
-                        users[k] += Availability[i][j][k];
+                        users[k] += Availability[(i*TimeSlots + j)*UserTypes + k];
             return users;
         }
 
@@ -99,14 +74,14 @@ namespace OMA_Project
                     file.ReadLine();
                     line = file.ReadLine();
                     var tasksPerUser = Array.ConvertAll(line.Trim().Split(' '), int.Parse);
-                    var orderedTaskPerUser = tasksPerUser.Select((t, u) => new { task = t, user = u })
+                    var orderedTaskPerUser = tasksPerUser.Select((t, u) => new {task = t, user = u})
                         .OrderBy(t => t.task).ToList();
                     prob.TasksPerUser = new TaskPerUser[userTypes];
                     for (var i = 0; i < orderedTaskPerUser.Count; ++i)
                         prob.TasksPerUser[i] = new TaskPerUser(orderedTaskPerUser[i].user, orderedTaskPerUser[i].task);
 
                     // Reads and stores matrix of Matrix
-                    var iterations = unchecked(userTypes * timings);
+                    var iterations = unchecked(userTypes*timings);
                     prob.Matrix = new Costs(cells, timings, userTypes);
                     file.ReadLine();
                     for (var i = 0; i < iterations; ++i)
@@ -121,11 +96,11 @@ namespace OMA_Project
                             // legge linea matrice considerando il punto (.) come separatore decimale
                             // direttamente troncato (non arrotondato)
                             line = file.ReadLine();
-                            matrix[j] = Array.ConvertAll(line.Trim().Split(' '), cost => (int)float.Parse(cost,
+                            matrix[j] = Array.ConvertAll(line.Trim().Split(' '), cost => (int) float.Parse(cost,
                                 NumberStyles.AllowDecimalPoint,
                                 NumberFormatInfo.InvariantInfo));
                         }
-                        prob.Matrix.AddMatrix(currentTimeSlot, currentUserType, matrix);
+                        prob.Matrix.AddMatrix(matrix, currentTimeSlot, currentUserType, cells, timings, userTypes);
                     }
 
                     // Reads and stores Tasks to be performed on each cell
@@ -134,13 +109,7 @@ namespace OMA_Project
                     prob.Tasks = Array.ConvertAll(line.Trim().Split(' '), int.Parse);
 
                     // Reads and stores different user availability on each cell, at different timings
-                    prob.Availability = new int[cells][][];
-                    for (var i = 0; i < cells; ++i)
-                    {
-                        prob.Availability[i] = new int[timings][];
-                        for (var j = 0; j < timings; ++j)
-                            prob.Availability[i][j] = new int[userTypes];
-                    }
+                    prob.Availability = new int[cells*timings*userTypes];
                     file.ReadLine();
                     for (var i = 0; i < iterations; ++i)
                     {
@@ -150,15 +119,17 @@ namespace OMA_Project
                         var currentTimeSlot = int.Parse(parts[1]);
                         line = file.ReadLine();
                         var userNumber = Array.ConvertAll(line.Trim().Split(' '), int.Parse);
-                        for (var j = 0; j < userNumber.Length; ++j)
+                        for (var cell = 0; cell < cells; ++cell)
                         {
-                            prob.Availability[j][currentTimeSlot][currentUserType] = userNumber[j];
-                            prob.Users += userNumber[j];
+                            prob.Availability[cell*timings*userTypes + currentTimeSlot*userTypes + currentUserType] =
+                                userNumber[cell];
+                            prob.Users += userNumber[cell];
                         }
                     }
                 }
             }
-            prob.immutableAvailability = prob.Availability.DeepClone();
+            prob.ImmutableAvailability = prob.Availability.DeepClone();
+            prob.ImmutableUsers = prob.Users;
             return prob;
         }
     }

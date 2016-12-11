@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime;
 using System.Runtime.CompilerServices;
@@ -11,9 +12,10 @@ namespace OMA_Project
     {
         public static readonly Random generator = new Random();
         public static Problem problem;
+
         public static void Main(string[] args)
         {
-            Process assignement = Process.GetCurrentProcess();
+            var assignement = Process.GetCurrentProcess();
             assignement.PriorityClass = ProcessPriorityClass.High;
 
             problem = Problem.ReadFromFile(args[0]);
@@ -28,28 +30,28 @@ namespace OMA_Project
                 var solver = new Solver();
                 r.Elapsed += Callback;
                 r.Enabled = true;
-                var currentSolution = solver.InitialSolution();
+                var currentSolution = Solver.InitialSolution();
                 var bestSolution = currentSolution.DeepClone();
                 var bestFitness = Solver.ObjectiveFunction(currentSolution);
 
                 const int k_0 = 5;
                 const int k_max = 25;
 
-                var k = k_0;
-
-                var accepted = false;
+                
                 var availabilities = problem.Availability.DeepClone();
                 var users = problem.Users;
-                while (r.Enabled)
+                try
                 {
-                    try
+                    var k = k_0;
+                    var accepted = false;
+                    while (r.Enabled)
                     {
                         if (accepted)
                         {
                             availabilities = problem.Availability.DeepClone();
                             users = problem.Users;
                         }
-                        currentSolution = solver.VNS(currentSolution, k);
+                        currentSolution = Solver.VNS(currentSolution, k);
                         var tempFitness = Solver.ObjectiveFunction(currentSolution);
                         if (tempFitness < bestFitness)
                         {
@@ -67,13 +69,49 @@ namespace OMA_Project
                             problem.Users = users;
                         }
                     }
-                    catch (NoUserLeft)
+                }
+                catch (NoUserLeft)
+                {
+                    // Most likely it's an ST, try with a GRASP instead of VNS
+                    Dictionary<int, Dictionary<int, int>> requiredUsers = new Dictionary<int, Dictionary<int, int>>();
+                    if (r.Enabled)
                     {
-                        accepted = false;
-                        currentSolution = bestSolution.DeepClone();
-                        problem.Availability = availabilities.DeepClone();
-                        problem.Users = users;
+                        for (int i = 0; i < bestSolution.Count; i += 6)
+                        {
+                            Dictionary<int, int> required;
+                            if (!requiredUsers.ContainsKey(bestSolution[i + 1]))
+                            {
+                                required = new Dictionary<int, int>();
+                                requiredUsers.Add(bestSolution[i + 1], required);
+                            }
+                            else
+                                required = requiredUsers[bestSolution[i + 1]];
+                            if (required.ContainsKey(bestSolution[i + 3]))
+                                required[bestSolution[i + 3]] += bestSolution[i + 4];
+                            else
+                                required.Add(bestSolution[i + 3], bestSolution[i + 4]);
+                        }
                     }
+                    while (r.Enabled)
+                    {
+                        try
+                        {
+                            problem.Availability = problem.ImmutableAvailability.DeepClone();
+                            problem.Users = problem.ImmutableUsers;
+                            currentSolution = Solver.GRASP(requiredUsers);
+                            var tempFitness = Solver.ObjectiveFunction(currentSolution);
+                            if (tempFitness < bestFitness)
+                            {
+                                bestSolution = currentSolution.DeepClone();
+                                bestFitness = tempFitness;
+                            }
+                            else
+                            {
+                                problem.Users = users;
+                            }
+                        } catch (NoUserLeft) { }
+                    }
+
                 }
                 s.Stop();
 
@@ -83,7 +121,7 @@ namespace OMA_Project
 
         private static void Callback(object sender, ElapsedEventArgs e)
         {
-            ((Timer) sender).Enabled = false;
+            ((Timer)sender).Enabled = false;
         }
     }
 }
