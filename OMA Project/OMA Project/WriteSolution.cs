@@ -6,6 +6,19 @@ namespace OMA_Project
 {
     public static class WriteSolution
     {
+        public static void WriteMov(string filename, List<int> moving)
+        {
+            using (var writer = new StreamWriter(filename, true))
+            {
+                for (var i = 0; i < moving.Count; i += 6)
+                {
+                    string toWrite = moving[i].ToString() + ';' + moving[i + 1] + ';' + 
+                        moving[1 + 2] + ';' + moving[i + 3] + ';' + moving[i + 4];
+                    writer.WriteLine(toWrite);
+                }
+            }
+        }
+
         public static void Write(string filename, List<int> solution, int fitness, long elapsedTime,
             string instance)
         {

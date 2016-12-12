@@ -61,7 +61,12 @@ namespace OMA_Project
                         else
                         {
                             accepted = false;
-                            k = k == k_max ? k_0 : k + 1;
+                            if (k == k_max)
+                            {
+                                k = k_0;
+                            }
+                            else
+                                k++;
                             currentSolution = bestSolution.DeepClone();
                             problem.Availability = availabilities.DeepClone();
                             problem.Users = users;
