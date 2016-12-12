@@ -18,7 +18,8 @@ namespace OMA_Project
                 tasks[Movings[i][1]] -= Movings[i][5];
                 //Aggiorna i task da fare rimuovendo quelli svolti dal vettore soluzione considerato
                 availabilities[
-                        (Movings[i][0]*Program.problem.TimeSlots + Movings[i][2])*Program.problem.UserTypes + Movings[i][3]]
+                        (Movings[i][0]*Program.problem.TimeSlots + Movings[i][2])*Program.problem.UserTypes +
+                        Movings[i][3]]
                     -= Movings[i][4];
                 //Aggiorna le disponibilità per la cella di partenza, per un certo timeslot, per un certo tipo utente
             }

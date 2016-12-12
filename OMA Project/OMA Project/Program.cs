@@ -36,7 +36,6 @@ namespace OMA_Project
                 const int k_0 = 5;
                 const int k_max = 25;
 
-                
                 var availabilities = problem.Availability.DeepClone();
                 var users = problem.Users;
                 try
@@ -72,10 +71,9 @@ namespace OMA_Project
                 catch (NoUserLeft)
                 {
                     // Most likely it's an ST, try with a GRASP instead of VNS
-                    Dictionary<int, Dictionary<int, int>> requiredUsers = new Dictionary<int, Dictionary<int, int>>();
+                    var requiredUsers = new Dictionary<int, Dictionary<int, int>>();
                     if (r.Enabled)
-                    {
-                        for (int i = 0; i < bestSolution.Count; i += 6)
+                        for (var i = 0; i < bestSolution.Count; i += 6)
                         {
                             Dictionary<int, int> required;
                             if (!requiredUsers.ContainsKey(bestSolution[i + 1]))
@@ -90,9 +88,7 @@ namespace OMA_Project
                             else
                                 required.Add(bestSolution[i + 3], bestSolution[i + 4]);
                         }
-                    }
                     while (r.Enabled)
-                    {
                         try
                         {
                             problem.Availability = problem.ImmutableAvailability.DeepClone();
@@ -108,19 +104,20 @@ namespace OMA_Project
                             {
                                 problem.Users = users;
                             }
-                        } catch (NoUserLeft) { }
-                    }
-
+                        }
+                        catch (NoUserLeft)
+                        {
+                        }
                 }
                 s.Stop();
 
-                //WriteSolution.Write(args[1], bestSolution, bestFitness, s.ElapsedMilliseconds, args[0]);
+                WriteSolution.Write(args[1], bestSolution, bestFitness, s.ElapsedMilliseconds, args[0]);
             }
         }
 
         private static void Callback(object sender, ElapsedEventArgs e)
         {
-            ((Timer)sender).Enabled = false;
+            ((Timer) sender).Enabled = false;
         }
     }
 }

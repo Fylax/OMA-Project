@@ -15,17 +15,17 @@ namespace OMA_Project
             var u3 = 0;
             using (var writer = new StreamWriter(filename, true))
             {
-                for (var i = 0; i < solution.Count; i+=6)
-                    switch (solution[i+3])
+                for (var i = 0; i < solution.Count; i += 6)
+                    switch (solution[i + 3])
                     {
                         case 0:
-                            u1 += solution[i+4];
+                            u1 += solution[i + 4];
                             break;
                         case 1:
-                            u2 += solution[i+4];
+                            u2 += solution[i + 4];
                             break;
                         case 2:
-                            u3 += solution[i+4];
+                            u3 += solution[i + 4];
                             break;
                     }
                 writer.WriteLine('"' + name + "\";" +
