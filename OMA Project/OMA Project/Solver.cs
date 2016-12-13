@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using OMA_Project.Extensions;
 using static OMA_Project.Program;
 
 namespace OMA_Project
@@ -336,29 +337,54 @@ namespace OMA_Project
             returns.Add(movings[size - 3]);
             returns.Add(movings[size - 2]);
             returns.Add(movings[size - 1]);
-            for (int i = size - 6; (i -= 6) > 0;)
+            for (int i = size - 6; (i -= 6) >= 0;)
             {
-                for (int j = returns.Count; (j -= 6) > 0;)
+                bool contained = false;
+                for (int j = returns.Count; (j -= 6) >= 0 && !contained;)
                 {
                     if (returns[j] == movings[i] && returns[j + 1] == movings[i + 1] &&
-                        returns[j + 2] == movings[i + 2] && returns[j + 3] == movings[i + 3])
+                        returns[j +2] == movings[i +2] && returns[j +3] == movings[i + 3])
                     {
                         returns[j + 4] += movings[i + 4];
                         returns[j + 5] += movings[i + 5];
-                        break;
-                    }
-                    else
-                    {
-                        returns.Add(movings[i]);
-                        returns.Add(movings[i+1]);
-                        returns.Add(movings[i+2]);
-                        returns.Add(movings[i+3]);
-                        returns.Add(movings[i+4]);
-                        returns.Add(movings[i+5]);
+                        contained = true;
                     }
                 }
-
+                if (contained) continue;
+                returns.Add(movings[i]);
+                returns.Add(movings[i + 1]);
+                returns.Add(movings[i + 2]);
+                returns.Add(movings[i + 3]);
+                returns.Add(movings[i + 4]);
+                returns.Add(movings[i + 5]);
             }
+            return returns;
+        }
+
+        public static List<int> Sweeper(List<int> movings)
+        {
+            int cells = problem.Cells;
+            List<int> returns = new List<int>(movings.Capacity);
+            List<HashSet<int>> lookup = new List<HashSet<int>>(cells);
+            int[] tasks = problem.Tasks.DeepClone();
+            for (int i = cells; i-- > 0 ;)
+            {
+                lookup.Add(new HashSet<int>());
+            }
+            for (int i = movings.Count; (i -= 6) >= 0;)
+            {
+                lookup[movings[i]].Add(i);
+                tasks[movings[i + 1]] -= movings[i + 3]*movings[i + 4]*problem.TasksPerUser[movings[i + 3]].Tasks;
+            }
+
+            for (int i = cells; i-- > 0;)
+            {
+                if (tasks[i] < 0)
+                {
+                    
+                }
+            }
+
             return returns;
         }
     }

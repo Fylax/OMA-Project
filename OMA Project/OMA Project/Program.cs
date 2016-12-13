@@ -24,7 +24,7 @@ namespace OMA_Project
             GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
             GC.TryStartNoGCRegion(174000000);
 
-            using (var r = new Timer(2000))
+            using (var r = new Timer(5000))
             {
                 var s = Stopwatch.StartNew();
                 r.Elapsed += Callback;
@@ -54,7 +54,7 @@ namespace OMA_Project
                         if (tempFitness < bestFitness)
                         {
                             accepted = true;
-                            bestSolution = currentSolution.DeepClone();
+                            bestSolution = Solver.Compactizator(currentSolution);
                             bestFitness = tempFitness;
                             k = k_0;
                         }
