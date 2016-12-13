@@ -98,7 +98,12 @@ namespace OMA_Project
                     problem.Availability[(minimum[0] * problem.TimeSlots + minimum[1]) * problem.UserTypes + minimum[2]] -=
                         used;
                     problem.Users -= used;
-                    Compactizator(movings, minimum[0], destination, minimum[1], minimum[2], used, tasks);
+                    movings.Add(minimum[0]);
+                    movings.Add(destination);
+                    movings.Add(minimum[1]);
+                    movings.Add(minimum[2]);
+                    movings.Add(used);
+                    movings.Add(tasks);
                     tasks = 0;
                 }
                 else
@@ -107,7 +112,12 @@ namespace OMA_Project
                         available;
                     problem.Users -= available;
                     tasks = tasks - available * problem.TasksPerUser[minimum[2]].Tasks;
-                    Compactizator(movings, minimum[0], destination, minimum[1], minimum[2], available, available * problem.TasksPerUser[minimum[2]].Tasks);
+                    movings.Add(minimum[0]);
+                    movings.Add(destination);
+                    movings.Add(minimum[1]);
+                    movings.Add(minimum[2]);
+                    movings.Add(available);
+                    movings.Add(available * problem.TasksPerUser[minimum[2]].Tasks);
                 }
             }
         }
@@ -316,44 +326,40 @@ namespace OMA_Project
             return movings;
         }
 
-        public static void Compactizator(List<int> movings, int start, int dest, int timeSlot, int userType, int users, int tasks)
+        public static List<int> Compactizator(List<int> movings)
         {
-            for (int i = movings.Count; (i -= 6) > 0;)
+            List<int> returns = new List<int>(movings.Capacity);
+            int size = movings.Count;
+            returns.Add(movings[size - 6]);
+            returns.Add(movings[size - 5]);
+            returns.Add(movings[size - 4]);
+            returns.Add(movings[size - 3]);
+            returns.Add(movings[size - 2]);
+            returns.Add(movings[size - 1]);
+            for (int i = size - 6; (i -= 6) > 0;)
             {
-                if (movings[i] == start && movings[i + 1] == dest && movings[i + 2] == timeSlot &&
-                    movings[i + 3] == userType)
+                for (int j = returns.Count; (j -= 6) > 0;)
                 {
-                    if (start == 12 && dest == 14)
+                    if (returns[j] == movings[i] && returns[j + 1] == movings[i + 1] &&
+                        returns[j + 2] == movings[i + 2] && returns[j + 3] == movings[i + 3])
                     {
-                        int x = 0;
+                        returns[j + 4] += movings[i + 4];
+                        returns[j + 5] += movings[i + 5];
+                        break;
                     }
-                    movings[i + 4] += users;
-                    movings[i + 5] += tasks;
-                    int diff = movings[i + 4] * problem.TasksPerUser[movings[i + 3]].Tasks - movings[i + 5];
-                    if (diff >= problem.TasksPerUser[movings[i + 3]].Tasks)
+                    else
                     {
-                        int div = diff / problem.TasksPerUser[movings[i + 3]].Tasks;
-                        movings[i + 4] -= div;
-                        problem.Availability[
-                            (movings[i] * problem.TimeSlots + movings[i + 2]) * problem.UserTypes +
-                            movings[i + 3]] += div;
-                        problem.Users += div;
+                        returns.Add(movings[i]);
+                        returns.Add(movings[i+1]);
+                        returns.Add(movings[i+2]);
+                        returns.Add(movings[i+3]);
+                        returns.Add(movings[i+4]);
+                        returns.Add(movings[i+5]);
                     }
-
-
-
-                    return;
                 }
 
-
             }
-
-            movings.Add(start);
-            movings.Add(dest);
-            movings.Add(timeSlot);
-            movings.Add(userType);
-            movings.Add(users);
-            movings.Add(tasks);
+            return returns;
         }
     }
 }

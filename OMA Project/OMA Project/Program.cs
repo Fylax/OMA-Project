@@ -24,7 +24,7 @@ namespace OMA_Project
             GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
             GC.TryStartNoGCRegion(174000000);
 
-            using (var r = new Timer(5000))
+            using (var r = new Timer(2000))
             {
                 var s = Stopwatch.StartNew();
                 r.Elapsed += Callback;
@@ -115,7 +115,7 @@ namespace OMA_Project
                         }
                 }
                 s.Stop();
-
+                WriteSolution.WriteMov(args[1], bestSolution);
                 WriteSolution.Write(args[1], bestSolution, bestFitness, s.ElapsedMilliseconds, args[0]);
             }
         }
