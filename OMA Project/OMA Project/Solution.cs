@@ -5,22 +5,22 @@ namespace OMA_Project
 {
     public static class Solution
     {
-        public static bool IsFeasible(List<int[]> Movings)
+        public static bool IsFeasible(List<int> movings)
         {
             var tasks = (int[]) Program.problem.Tasks.Clone();
             var availabilities = Program.problem.ImmutableAvailability.DeepClone();
 
-            for (var i = Movings.Count; i-- > 0;)
+            for (var i = movings.Count; (i-=6) >= 0;)
             {
-                if (Movings[i][0] == Movings[i][1]) //Se la partenza è uguale alla destinazione (Non possibile)
+                if (movings[i] == movings[i+1]) //Se la partenza è uguale alla destinazione (Non possibile)
                     return false; //Soluzione unfeasible
 
-                tasks[Movings[i][1]] -= Movings[i][5];
+                tasks[movings[i+1]] -= movings[i+4]*Program.problem.TasksPerUser[movings[i+3]].Tasks;
                 //Aggiorna i task da fare rimuovendo quelli svolti dal vettore soluzione considerato
                 availabilities[
-                        (Movings[i][0]*Program.problem.TimeSlots + Movings[i][2])*Program.problem.UserTypes +
-                        Movings[i][3]]
-                    -= Movings[i][4];
+                        (movings[i]*Program.problem.TimeSlots + movings[i+2])*Program.problem.UserTypes +
+                        movings[i+3]]
+                    -= movings[i+4];
                 //Aggiorna le disponibilità per la cella di partenza, per un certo timeslot, per un certo tipo utente
             }
 
