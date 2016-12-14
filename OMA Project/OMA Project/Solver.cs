@@ -380,7 +380,7 @@ namespace OMA_Project
                         used[movings[ptr + 3]] += movings[ptr + 4];
                     }
 
-                    for (int j = problem.UserTypes; j-- > 0;)
+                    for (int j = problem.UserTypes; j-- > 1;)
                     {
                         if (used[j] == 0) continue;
                         int toBeRemoved = overbooking/problem.TasksPerUser[j].Tasks;
@@ -394,13 +394,14 @@ namespace OMA_Project
                                     movings[ptr + 4] -= toBeRemoved;
                                     problem.Availability[(movings[ptr]*problem.TimeSlots + movings[ptr + 2])*problem.UserTypes + j] +=
                                         toBeRemoved;
-                                    problem.Users += toBeRemoved;
                                     var diff = movings[ptr + 5] - movings[ptr + 4] * problem.TasksPerUser[j].Tasks;
                                     movings[ptr + 5] = movings[ptr + 4]*problem.TasksPerUser[j].Tasks;
+                                    overbooking -= toBeRemoved * problem.TasksPerUser[j].Tasks;
+                                    problem.Users += toBeRemoved;
+                                    if (diff == 0) break;
                                     toBeRemoved = 0;
                                     foreach (var k in lookup[i])
                                     {
-                                        if (diff == 0) break;
                                         if (k == ptr) continue;
                                         int localDiff = movings[k + 4]*problem.TasksPerUser[movings[k + 3]].Tasks -
                                                         movings[k + 5];
@@ -420,24 +421,9 @@ namespace OMA_Project
                                     }
                                     break;
                                 }
-                                problem.Availability[
-                                        (movings[ptr]*problem.TimeSlots + movings[ptr + 2])*problem.UserTypes + j] +=
-                                    movings[ptr + 4];
-                                problem.Users += movings[ptr + 4];
-                                toBeRemoved -= movings[ptr + 4];
-                                movings[ptr + 5] = 0;
-                                movings[ptr + 4] = 0;
                             }
                         }
-                        if (toBeRemoved == 0) break;
                     }
-                }
-            }
-            for (int i = movings.Count; (i -= 6) >= 0;)
-            {
-                if (movings[i + 4] == 0)
-                {
-                    movings.RemoveRange(i, 6);
                 }
             }
         }
