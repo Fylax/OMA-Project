@@ -54,7 +54,8 @@ namespace OMA_Project
                         if (tempFitness < bestFitness)
                         {
                             accepted = true;
-                            bestSolution = Solver.Compactizator(currentSolution);
+                            currentSolution = Solver.Compactizator(currentSolution);
+                            bestSolution = currentSolution.DeepClone();
                             bestFitness = Solver.ObjectiveFunction(bestSolution);
                             k = k_0;
                         }
