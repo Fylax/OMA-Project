@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace OMA_Project.Extensions
@@ -13,7 +14,7 @@ namespace OMA_Project.Extensions
         public static int[] DeepClone(this int[] source)
         {
             var destination = new int[source.Length];
-            Parallel.For(0, source.Length, i => destination[i] = source[i]);
+            Buffer.BlockCopy(source, 0, destination, 0, source.Length * 4);
             return destination;
         }
 

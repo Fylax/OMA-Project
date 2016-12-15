@@ -55,7 +55,6 @@ namespace OMA_Project
                         {
                             accepted = true;
                             bestSolution = Solver.Compactizator(currentSolution);
-                            Solver.Sweeper(bestSolution);
                             bestFitness = Solver.ObjectiveFunction(bestSolution);
                             k = k_0;
                         }
@@ -117,8 +116,6 @@ namespace OMA_Project
                 }
 
                 s.Stop();
-                Solution.IsFeasible(bestSolution);
-                WriteSolution.WriteMov(args[1], bestSolution);
                 WriteSolution.Write(args[1], bestSolution, bestFitness, s.ElapsedMilliseconds, args[0]);
             }
         }

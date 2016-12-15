@@ -20,7 +20,7 @@ namespace OMA_Project
         ///         <item>User type</item>
         ///     </list>
         /// </summary>
-        private readonly int[] costMatrix;
+        public readonly int[] costMatrix;
         private readonly object sync = new object();
 
         /// <summary>
