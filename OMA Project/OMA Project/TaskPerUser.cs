@@ -1,6 +1,6 @@
 ﻿namespace OMA_Project
 {
-    public struct TaskPerUser
+    public class TaskPerUser
     {
         public int UserType { get; }
         public int Tasks { get; }

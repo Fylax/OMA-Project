@@ -6,27 +6,23 @@ using System.Linq;
 using System.Text;
 using OMA_Project.Extensions;
 
-// ReSharper disable PossibleNullReferenceException
-
 namespace OMA_Project
 {
     public class Problem
     {
+        public int[] ImmutableAvailability { get; private set; }
+        public int ImmutableUsers { get; private set; }
+        public Costs Matrix { get; private set; }
+        public int Cells { get; }
+        public int TimeSlots { get; }
+        public int UserTypes { get; }
+
         private Problem(int cells, int timeSlots, int users)
         {
             Cells = cells;
             TimeSlots = timeSlots;
             UserTypes = users;
         }
-
-        public int[] ImmutableAvailability { get; private set; }
-        public int ImmutableUsers { get; private set; }
-
-        public Costs Matrix { get; private set; }
-
-        public int Cells { get; }
-        public int TimeSlots { get; }
-        public int UserTypes { get; }
 
         /// <summary>
         ///     Lista con il numero di task per ogni cella
@@ -46,9 +42,9 @@ namespace OMA_Project
         {
             var users = new int[UserTypes];
             for (var i = Cells; i-- > 0;)
-                for (var j = TimeSlots; j-- > 0;)
-                    for (var k = UserTypes; k-- > 0;)
-                        users[k] += Availability[(i*TimeSlots + j)*UserTypes + k];
+            for (var j = TimeSlots; j-- > 0;)
+            for (var k = UserTypes; k-- > 0;)
+                users[k] += Availability[(i * TimeSlots + j) * UserTypes + k];
             return users;
         }
 
@@ -82,7 +78,7 @@ namespace OMA_Project
                         prob.TasksPerUser[i] = new TaskPerUser(orderedTaskPerUser[i].user, orderedTaskPerUser[i].task);
 
                     // Reads and stores matrix of Matrix
-                    var iterations = unchecked(userTypes*timings);
+                    var iterations = unchecked(userTypes * timings);
                     prob.Matrix = new Costs(cells, timings, userTypes);
                     file.ReadLine();
                     for (var i = 0; i < iterations; ++i)
@@ -110,7 +106,7 @@ namespace OMA_Project
                     prob.Tasks = Array.ConvertAll(line.Trim().Split(' '), int.Parse);
 
                     // Reads and stores different user availability on each cell, at different timings
-                    prob.Availability = new int[cells*timings*userTypes];
+                    prob.Availability = new int[cells * timings * userTypes];
                     file.ReadLine();
                     for (var i = 0; i < iterations; ++i)
                     {
@@ -122,7 +118,8 @@ namespace OMA_Project
                         var userNumber = Array.ConvertAll(line.Trim().Split(' '), int.Parse);
                         for (var cell = 0; cell < cells; ++cell)
                         {
-                            prob.Availability[cell*timings*userTypes + currentTimeSlot*userTypes + currentUserType] =
+                            prob.Availability[cell * timings * userTypes + currentTimeSlot * userTypes + currentUserType
+                                ] =
                                 userNumber[cell];
                             prob.Users += userNumber[cell];
                         }

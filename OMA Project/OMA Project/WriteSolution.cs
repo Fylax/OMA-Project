@@ -12,8 +12,8 @@ namespace OMA_Project
             {
                 for (var i = 0; i < moving.Count; i += 6)
                 {
-                    string toWrite = moving[i].ToString() + ';' + moving[i + 1] + ';' + 
-                        moving[i + 2] + ';' + moving[i + 3] + ';' + moving[i + 4];
+                    var toWrite = moving[i].ToString() + ';' + moving[i + 1] + ';' +
+                                  moving[i + 2] + ';' + moving[i + 3] + ';' + moving[i + 4];
                     writer.WriteLine(toWrite);
                 }
             }
@@ -42,7 +42,7 @@ namespace OMA_Project
                             break;
                     }
                 writer.WriteLine('"' + name + "\";" +
-                                 (elapsedTime/1000d).ToString(CultureInfo.InvariantCulture) + ';' +
+                                 (elapsedTime / 1000d).ToString(CultureInfo.InvariantCulture) + ';' +
                                  fitness + ';' + u1 + ';' + u2 + ';' + u3);
             }
         }

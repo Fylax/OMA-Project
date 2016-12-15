@@ -63,9 +63,7 @@ namespace OMA_Project
                         {
                             accepted = false;
                             if (k == k_max)
-                            {
                                 k = k_0;
-                            }
                             else
                                 k++;
                             currentSolution = bestSolution.DeepClone();
@@ -88,7 +86,9 @@ namespace OMA_Project
                                 requiredUsers.Add(bestSolution[i + 1], required);
                             }
                             else
+                            {
                                 required = requiredUsers[bestSolution[i + 1]];
+                            }
                             if (required.ContainsKey(bestSolution[i + 3]))
                                 required[bestSolution[i + 3]] += bestSolution[i + 4];
                             else
