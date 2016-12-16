@@ -54,7 +54,6 @@ namespace OMA_Project
                         if (tempFitness < bestFitness)
                         {
                             accepted = true;
-                            currentSolution = Solver.Compactizator(currentSolution);
                             bestSolution = currentSolution.DeepClone();
                             bestFitness = Solver.ObjectiveFunction(bestSolution);
                             k = k_0;
@@ -116,7 +115,6 @@ namespace OMA_Project
                         }
                 }
 
-                //Solution.IsFeasible(bestSolution);
                 s.Stop();
                 WriteSolution.Write(args[1], bestSolution, bestFitness, s.ElapsedMilliseconds, args[0]);
             }

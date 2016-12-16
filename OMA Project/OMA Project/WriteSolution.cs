@@ -29,7 +29,7 @@ namespace OMA_Project
             using (var writer = new StreamWriter(filename, true))
             {
                 for (var i = 0; i < solution.Count; i += 6)
-                    switch (solution[i + 3])
+                    switch (Program.problem.TasksPerUser[solution[i + 3]].UserType)
                     {
                         case 0:
                             u1 += solution[i + 4];

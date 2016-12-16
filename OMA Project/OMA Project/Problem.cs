@@ -10,19 +10,19 @@ namespace OMA_Project
 {
     public class Problem
     {
-        public int[] ImmutableAvailability { get; private set; }
-        public int ImmutableUsers { get; private set; }
-        public Costs Matrix { get; private set; }
-        public int Cells { get; }
-        public int TimeSlots { get; }
-        public int UserTypes { get; }
-
         private Problem(int cells, int timeSlots, int users)
         {
             Cells = cells;
             TimeSlots = timeSlots;
             UserTypes = users;
         }
+
+        public int[] ImmutableAvailability { get; private set; }
+        public int ImmutableUsers { get; private set; }
+        public Costs Matrix { get; private set; }
+        public int Cells { get; }
+        public int TimeSlots { get; }
+        public int UserTypes { get; }
 
         /// <summary>
         ///     Lista con il numero di task per ogni cella
