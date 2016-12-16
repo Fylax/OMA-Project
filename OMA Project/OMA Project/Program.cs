@@ -116,6 +116,7 @@ namespace OMA_Project
                         }
                 }
 
+                //Solution.IsFeasible(bestSolution);
                 s.Stop();
                 WriteSolution.Write(args[1], bestSolution, bestFitness, s.ElapsedMilliseconds, args[0]);
             }

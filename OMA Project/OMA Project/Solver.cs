@@ -9,7 +9,7 @@ namespace OMA_Project
         public static List<int> InitialSolution()
         {
             var solution = new List<int>(600);
-            var orderedTask = problem.Tasks.Select((t, c) => new {cell = c, task = t})
+            var orderedTask = problem.Tasks.Select((t, c) => new { cell = c, task = t })
                 .Where(t => t.task != 0).OrderBy(t => t.task).ToArray();
             var totalUsers = problem.TotalUsers();
             for (var i = orderedTask.Length; i-- > 0;)
@@ -110,36 +110,34 @@ namespace OMA_Project
                 if (available * tasksPerUser[minimum[2]].Tasks >= tasks)
                 {
                     // shift based ceiling function (way faster than Math.Ceiling)
-                    var used = 32768 - (int) (32768d - tasks / (double) tasksPerUser[minimum[2]].Tasks);
+                    var used = 32768 - (int)(32768d - tasks / (double)tasksPerUser[minimum[2]].Tasks);
                     availability[(minimum[0] * timeSlots + minimum[1]) * userTypes + minimum[2]] -=
                         used;
                     problem.Users -= used;
 
                     var overBooking = used * tasksPerUser[minimum[2]].Tasks - tasks;
-                    var solvedOverBooking = 0;
-                    if (overBooking != 0 && minimum[2] != 0)
-                        for (var j = minimum[2]; j-- > 0 && overBooking != 0;)
+                    for (var i = userTypes; i-- > 0 && overBooking != 0;)
+                    {
+                        foreach (var ptr in lookup)
                         {
-                            if (tasksPerUser[j].Tasks > overBooking)
-                                continue;
-                            foreach (var ptr in lookup)
+                            if (overBooking == 0) break;
+                            if (movings[ptr + 3] != i) continue;
+                            var lastPerformed = tasksPerUser[i].Tasks*(1 - movings[ptr + 4]) + movings[ptr + 5];
+                            if (lastPerformed > overBooking) continue;
+                            overBooking -= lastPerformed;
+                            movings[ptr + 4]--;
+                            tasks += lastPerformed;
+                            availability[(movings[ptr] * timeSlots + movings[ptr + 2]) * userTypes + movings[ptr + 3]]++;
+                            problem.Users++;
+                            if (movings[ptr + 4] != 0)
+                                movings[ptr + 5] -= lastPerformed;
+                            else
                             {
-                                if (movings[ptr + 3] != j) continue;
-                                var toBeRemoved = overBooking / tasksPerUser[j].Tasks;
-                                if (movings[ptr + 4] < toBeRemoved) continue;
-                                movings[ptr + 4] -= toBeRemoved;
-                                movings[ptr + 5] = movings[ptr + 4] * tasksPerUser[j].Tasks;
-                                overBooking -= toBeRemoved * tasksPerUser[j].Tasks;
-                                solvedOverBooking += toBeRemoved * tasksPerUser[j].Tasks;
-                                availability[
-                                        (movings[ptr] * timeSlots + movings[ptr + 2]) * userTypes + movings[ptr + 3]] +=
-                                    toBeRemoved;
-                                problem.Users += toBeRemoved;
-                                if (movings[ptr + 4] == 0)
-                                    droppable.Add(ptr);
-                                if (overBooking == 0) break;
+                                droppable.Add(ptr);
                             }
                         }
+                    }
+
                     foreach (var ptr in droppable.OrderByDescending(s => s))
                         movings.RemoveRange(ptr, 6);
                     movings.Add(minimum[0]);
@@ -147,7 +145,7 @@ namespace OMA_Project
                     movings.Add(minimum[1]);
                     movings.Add(minimum[2]);
                     movings.Add(used);
-                    movings.Add(tasks + solvedOverBooking);
+                    movings.Add(tasks);
                     tasks = 0;
                 }
                 else
@@ -176,7 +174,7 @@ namespace OMA_Project
             // end optimization block;
             int sum;
             int j;
-            if ((solution.Count * 43) >> (8 % 2) != 0) // * 43 >> 8 == / 6
+            if ((solution.Count / 6) % 2 != 0)
             {
                 sum = costs.costMatrix[
                           ((solution[0] * cells + solution[1]) * timeSlots + solution[2]) * userTypes +
@@ -188,7 +186,7 @@ namespace OMA_Project
                 sum = 0;
                 j = 0;
             }
-            var times = solution.Count >> 1; // >> 1 == / 2
+            var times = solution.Count/2;
             for (var i = solution.Count; (i -= 6) >= times; j += 6)
                 if (i == j)
                     sum = sum +
@@ -274,8 +272,8 @@ namespace OMA_Project
 
         public static List<int> VNS(List<int> movings, int percentage)
         {
-            var numTuples = (movings.Count * 43) >> 8; // * 43 >> 8 == / 6
-            var counter = (numTuples * percentage * 41) >> 12; // * 41 >> 12 == / 100
+            var numTuples = (movings.Count)/6;
+            var counter = numTuples*percentage/100;
             var toBeRecomputed = new HashSet<int>();
             var toBeDropped = new bool[numTuples];
             for (var i = counter; i-- > 0;)
@@ -296,7 +294,7 @@ namespace OMA_Project
             var tempList = new List<int>(movings.Capacity);
             for (var i = 0; i < movings.Count; i += 6)
             {
-                if (toBeDropped[(i * 43) >> 8]) continue; // * 43 >> 8 == / 6
+                if (toBeDropped[(i /6)]) continue;
                 tempList.Add(movings[i]);
                 tempList.Add(movings[i + 1]);
                 tempList.Add(movings[i + 2]);
