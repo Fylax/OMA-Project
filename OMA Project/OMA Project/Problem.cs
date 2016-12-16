@@ -10,6 +10,12 @@ namespace OMA_Project
 {
     public class Problem
     {
+        /// <summary>
+        /// Initializes a new (and unique) instance of the <see cref="Problem"/>.
+        /// </summary>
+        /// <param name="cells">Number of cells.</param>
+        /// <param name="timeSlots">Number of time slots.</param>
+        /// <param name="users">Number of users types.</param>
         private Problem(int cells, int timeSlots, int users)
         {
             Cells = cells;
@@ -17,23 +23,42 @@ namespace OMA_Project
             UserTypes = users;
         }
 
+        /// <summary>
+        /// An immutable copy of original availability informations.
+        /// </summary>
+        /// <inheritdoc cref="Availability"/>
         public int[] ImmutableAvailability { get; private set; }
+
+        /// <summary>
+        /// An immutable copy of the original total users counter
+        /// (regardless of the type of the user).
+        /// </summary>
+        /// <inheritdoc cref="Users"/>
         public int ImmutableUsers { get; private set; }
+
         public Costs Matrix { get; private set; }
+
         public int Cells { get; }
+
         public int TimeSlots { get; }
+
         public int UserTypes { get; }
 
-        /// <summary>
-        ///     Lista con il numero di task per ogni cella
-        /// </summary>
         public int[] Tasks { get; private set; }
 
-        /// <summary>
-        ///     Numero di task che ogni tipo di utente può eseguire.
-        /// </summary>
         public TaskPerUser[] TasksPerUser { get; private set; }
 
+        /// <summary>
+        /// Flattened array containing available users on each cell
+        /// of each type on each time slot.
+        /// </summary>
+        /// <value>
+        /// As this is the result of the flattening of a 3D array,
+        /// in order to compute the 3D indices, following formula
+        /// must be used:
+        /// <c>(CurrentCell * NumberOfTimeSlots + CurrentTimeSlot) * 
+        /// NumberOfUserTypes + CurrentUserType</c>
+        /// </value>
         public int[] Availability { get; set; }
 
         public int Users { get; set; }

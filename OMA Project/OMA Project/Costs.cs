@@ -20,8 +20,17 @@ namespace OMA_Project
         ///         <item>User type</item>
         ///     </list>
         /// </summary>
+        /// <remarks>
+        /// As the array has been flattened, in order to compute the 4D indices, following
+        /// formula must be used:
+        /// <c>((Start * NumberOfCells + Destination) * NumberOfTimeSlots + CurrentTimeSlot) * 
+        /// NumberOfUserTypes + CurrentUserType</c>
+        /// </remarks>
         public readonly int[] costMatrix;
 
+        /// <summary>
+        /// Internal object for multi-threading locking.
+        /// </summary>
         private readonly object sync = new object();
 
         /// <summary>
@@ -48,8 +57,12 @@ namespace OMA_Project
         /// </summary>
         private readonly bool unrollableUser;
 
+
         /// <summary>
-        ///     Creates a new cost matrix (setting to zero all values)
+        /// Initializes a new <see cref="Costs"/> matrix (performing checks on
+        /// unrollability conditions).<para />
+        /// <see cref="unrollableCells"/> and <see cref="unrollableUser"/> for informations
+        /// about loop unrolling and how it is managed.
         /// </summary>
         /// <param name="numCells">Number of cells</param>
         /// <param name="timeSlots">Number of time slots</param>
@@ -61,15 +74,16 @@ namespace OMA_Project
             unrollableCells = numCells % 2 == 0;
         }
 
+
         /// <summary>
         ///     Adds a cost matrix to the total cost matrix
         /// </summary>
         /// <param name="matrix">Matrix to be added</param>
         /// <param name="timeSlot">Current time slot</param>
         /// <param name="userType">Current user type</param>
-        /// <param name="cells"></param>
-        /// <param name="timeSlots"></param>
-        /// <param name="userTypes"></param>
+        /// <param name="cells">Number of cells</param>
+        /// <param name="timeSlots">Number of time slots</param>
+        /// <param name="userTypes">Number of user types</param>
         public void AddMatrix(int[][] matrix, int timeSlot, int userType, int cells, int timeSlots, int userTypes)
         {
             for (var start = 0; start < cells; ++start)
@@ -77,18 +91,6 @@ namespace OMA_Project
                 costMatrix[((start * cells + dest) * timeSlots + timeSlot) * userTypes + userType] = matrix[start][dest];
         }
 
-        /// <summary>
-        ///     Retrieves the cost of a movement.
-        /// </summary>
-        /// <param name="start">Starting cell</param>
-        /// <param name="destination">Destination cell</param>
-        /// <param name="timeSlot">Current time slot</param>
-        /// <param name="userType">Current user type</param>
-        /// <returns>Cost for given movement.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int GetCost(int start, int destination, int timeSlot, int userType) =>
-            costMatrix[
-                ((start * problem.Cells + destination) * problem.TimeSlots + timeSlot) * problem.UserTypes + userType];
 
         /// <summary>
         ///     Retrieves the minimum cost for a given couple of fixed destination cell and user type.
