@@ -4,6 +4,9 @@ using System.IO;
 
 namespace OMA_Project
 {
+    /// <summary>
+    ///     Writes the result on a file
+    /// </summary>
     public static class WriteSolution
     {
         public static void WriteMov(string filename, List<int> moving)
@@ -19,6 +22,14 @@ namespace OMA_Project
             }
         }
 
+        /// <summary>
+        ///     Writes a summary of the solution on file.
+        /// </summary>
+        /// <param name="filename">Output file.</param>
+        /// <param name="solution">Solution to be summarized.</param>
+        /// <param name="fitness">Fitness for this solution.</param>
+        /// <param name="elapsedTime">Elapsed time.</param>
+        /// <param name="instance">Instance name.</param>
         public static void Write(string filename, List<int> solution, int fitness, long elapsedTime,
             string instance)
         {

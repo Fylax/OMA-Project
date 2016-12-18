@@ -8,9 +8,21 @@ using OMA_Project.Extensions;
 
 namespace OMA_Project
 {
+    /// <summary>
+    /// Application's entry point.
+    /// </summary>
     internal static class Program
     {
+        /// <summary>
+        /// Random Number Generator used among various method.<para/>
+        /// As it internally avoids extracting same value multiple consecutive
+        /// times, it has been designed to be a static shared field.
+        /// </summary>
         public static readonly Random generator = new Random();
+
+        /// <summary>
+        /// Data concerning the problem.
+        /// </summary>
         public static Problem problem;
 
         public static void Main(string[] args)

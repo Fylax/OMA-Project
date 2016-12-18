@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace OMA_Project.Extensions
 {
+    /// <summary>
+    ///     Exposes effcient deep cloning methods.
+    /// </summary>
     public static class ExtensionMethods
     {
         /// <summary>

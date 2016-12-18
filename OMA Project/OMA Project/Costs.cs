@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using static OMA_Project.Program;
 
 namespace OMA_Project
@@ -21,15 +20,21 @@ namespace OMA_Project
         ///     </list>
         /// </summary>
         /// <remarks>
-        /// As the array has been flattened, in order to compute the 4D indices, following
-        /// formula must be used:
-        /// <c>((Start * NumberOfCells + Destination) * NumberOfTimeSlots + CurrentTimeSlot) * 
-        /// NumberOfUserTypes + CurrentUserType</c>
+        ///     As the array has been flattened, in order to compute the 4D indices, following
+        ///     formula must be used:
+        ///     <c>
+        ///         ((Start * NumberOfCells + Destination) * NumberOfTimeSlots + CurrentTimeSlot) *
+        ///         NumberOfUserTypes + CurrentUserType
+        ///     </c>
+        ///     .
+        ///     <para />
+        ///     This is an immutable property, number of tasks
+        ///     must <b>never</b> be changed.
         /// </remarks>
         public readonly int[] costMatrix;
 
         /// <summary>
-        /// Internal object for multi-threading locking.
+        ///     Internal object for multi-threading locking.
         /// </summary>
         private readonly object sync = new object();
 
@@ -57,12 +62,12 @@ namespace OMA_Project
         /// </summary>
         private readonly bool unrollableUser;
 
-
         /// <summary>
-        /// Initializes a new <see cref="Costs"/> matrix (performing checks on
-        /// unrollability conditions).<para />
-        /// <see cref="unrollableCells"/> and <see cref="unrollableUser"/> for informations
-        /// about loop unrolling and how it is managed.
+        ///     Initializes a new <see cref="Costs" /> matrix (performing checks on
+        ///     unrollability conditions).
+        ///     <para />
+        ///     See <see cref="unrollableCells" /> and <see cref="unrollableUser" /> for informations
+        ///     about loop unrolling and how it is managed.
         /// </summary>
         /// <param name="numCells">Number of cells</param>
         /// <param name="timeSlots">Number of time slots</param>
@@ -73,7 +78,6 @@ namespace OMA_Project
             unrollableUser = userTypes == 3;
             unrollableCells = numCells % 2 == 0;
         }
-
 
         /// <summary>
         ///     Adds a cost matrix to the total cost matrix
@@ -91,7 +95,6 @@ namespace OMA_Project
                 costMatrix[((start * cells + dest) * timeSlots + timeSlot) * userTypes + userType] = matrix[start][dest];
         }
 
-
         /// <summary>
         ///     Retrieves the minimum cost for a given couple of fixed destination cell and user type.
         /// </summary>
@@ -105,6 +108,15 @@ namespace OMA_Project
         ///         <item>Time slot</item>
         ///     </list>
         /// </returns>
+        /// <remarks>
+        ///     This method provides only valid minima, which means that
+        ///     for each possible minimum, before returning it, it checks
+        ///     if there are available users in that specific starting
+        ///     cell and timeslot.
+        ///     <para />
+        ///     For more information about how availabilities are computed,
+        ///     see <see cref="Problem.Availability" />
+        /// </remarks>
         public int[] GetMin(int destination, int userType)
         {
             // Optimization block (not really required, just more readability ed enforced inling)
@@ -182,6 +194,15 @@ namespace OMA_Project
         ///         <item>User type</item>
         ///     </list>
         /// </returns>
+        /// <remarks>
+        ///     This method provides only valid minima, which means that
+        ///     for each possible minimum, before returning it, it checks
+        ///     if there are available users of that type in that specific
+        ///     starting cell and timeslot.
+        ///     <para />
+        ///     For more information about how availabilities are computed,
+        ///     see <see cref="Problem.Availability" />
+        /// </remarks>
         public int[] GetMin(int destination)
         {
             // Optimization block (not really required, just more readability ed enforced inling)

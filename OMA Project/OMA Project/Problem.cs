@@ -8,10 +8,14 @@ using OMA_Project.Extensions;
 
 namespace OMA_Project
 {
+    /// <summary>
+    ///     Class containing all data concerning the problem (number of cells, number of timeslots,
+    ///     user types, etc.)
+    /// </summary>
     public class Problem
     {
         /// <summary>
-        /// Initializes a new (and unique) instance of the <see cref="Problem"/>.
+        ///     Initializes a new (and unique) instance of the <see cref="Problem" />.
         /// </summary>
         /// <param name="cells">Number of cells.</param>
         /// <param name="timeSlots">Number of time slots.</param>
@@ -24,45 +28,111 @@ namespace OMA_Project
         }
 
         /// <summary>
-        /// An immutable copy of original availability informations.
+        ///     An immutable copy of original availability informations.
         /// </summary>
-        /// <inheritdoc cref="Availability"/>
+        /// <inheritdoc cref="Availability" />
         public int[] ImmutableAvailability { get; private set; }
 
         /// <summary>
-        /// An immutable copy of the original total users counter
-        /// (regardless of the type of the user).
+        ///     An immutable copy of the original total users counter
+        ///     (regardless of the type of the user).
         /// </summary>
-        /// <inheritdoc cref="Users"/>
+        /// <inheritdoc cref="Users" />
         public int ImmutableUsers { get; private set; }
 
+        /// <summary>
+        ///     Allows to retrieve the matrix of the costs.
+        /// </summary>
+        /// <value>
+        ///     Matrix of all costs, containing method to perform
+        ///     computations on it.
+        /// </value>
         public Costs Matrix { get; private set; }
 
+        /// <summary>
+        ///     Gets the number of the cells.
+        /// </summary>
+        /// <value>
+        ///     Number of cells.
+        /// </value>
         public int Cells { get; }
 
+        /// <summary>
+        ///     Gets the number of time slots.
+        /// </summary>
+        /// <value>
+        ///     Number of time slots.
+        /// </value>
         public int TimeSlots { get; }
 
+        /// <summary>
+        ///     Gets the number of user types.
+        /// </summary>
+        /// <value>
+        ///     Number of user types.
+        /// </value>
         public int UserTypes { get; }
 
+        /// <summary>
+        ///     Gets the tasks tasks that must be accomplished
+        ///     on each cell.
+        /// </summary>
+        /// <value>
+        ///     Tasks to be performed on each cell.
+        /// </value>
+        /// <remarks>
+        ///     This is an immutable property, number of tasks
+        ///     must <b>never</b> be changed.
+        /// </remarks>
         public int[] Tasks { get; private set; }
 
+        /// <summary>
+        ///     Gets the tasks each user type can perform
+        ///     in ascending ordering (both user type and
+        ///     performable tasks are provided).
+        /// </summary>
+        /// <value>
+        ///     Number of tasks each user type can perform
+        /// </value>
+        /// <remarks>
+        ///     This is an immutable property, number of tasks
+        ///     must <b>never</b> be changed.
+        /// </remarks>
         public TaskPerUser[] TasksPerUser { get; private set; }
 
         /// <summary>
-        /// Flattened array containing available users on each cell
-        /// of each type on each time slot.
+        ///     Flattened array containing available users on each cell
+        ///     of each type on each time slot.
         /// </summary>
         /// <value>
-        /// As this is the result of the flattening of a 3D array,
-        /// in order to compute the 3D indices, following formula
-        /// must be used:
-        /// <c>(CurrentCell * NumberOfTimeSlots + CurrentTimeSlot) * 
-        /// NumberOfUserTypes + CurrentUserType</c>
+        ///     As this is the result of the flattening of a 3D array,
+        ///     in order to compute the 3D indices, following formula
+        ///     must be used:
+        ///     <c>
+        ///         (CurrentCell * NumberOfTimeSlots + CurrentTimeSlot) *
+        ///         NumberOfUserTypes + CurrentUserType
+        ///     </c>
         /// </value>
         public int[] Availability { get; set; }
 
+        /// <summary>
+        ///     Gets the total number of users still available.
+        /// </summary>
+        /// <value>
+        ///     The users.
+        /// </value>
+        /// <remarks>
+        ///     This property comes in hand for trowing <see cref="NoUserLeft" />.
+        /// </remarks>
         public int Users { get; set; }
 
+        /// <summary>
+        ///     Computes the number of users still available for each type.
+        /// </summary>
+        /// <returns>Users still available for each type.</returns>
+        /// <remarks>
+        ///     This method is mainly used in <see cref="Solver.SolvePreciseTasks" />.
+        /// </remarks>
         public int[] TotalUsers()
         {
             var users = new int[UserTypes];
@@ -73,6 +143,11 @@ namespace OMA_Project
             return users;
         }
 
+        /// <summary>
+        ///     Reads an instance file.
+        /// </summary>
+        /// <param name="inputFile">Path of the input file.</param>
+        /// <returns>Parsed problem.</returns>
         [SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times")]
         public static Problem ReadFromFile(string inputFile)
         {
