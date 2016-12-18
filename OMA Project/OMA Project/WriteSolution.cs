@@ -10,7 +10,7 @@ namespace OMA_Project
         {
             using (var writer = new StreamWriter(filename, true))
             {
-                for (var i = 0; i < moving.Count; i += 6)
+                for (var i = 0; i < moving.Count; i += 8)
                 {
                     var toWrite = moving[i].ToString() + ';' + moving[i + 1] + ';' +
                                   moving[i + 2] + ';' + moving[i + 3] + ';' + moving[i + 4];
@@ -28,7 +28,7 @@ namespace OMA_Project
             var u3 = 0;
             using (var writer = new StreamWriter(filename, true))
             {
-                for (var i = 0; i < solution.Count; i += 6)
+                for (var i = 0; i < solution.Count; i += 8)
                     switch (solution[i + 3])
                     {
                         case 0:
