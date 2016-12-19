@@ -10,7 +10,7 @@ namespace OMA_Project
             var tasks = (int[]) Program.problem.Tasks.Clone();
             var availabilities = Program.problem.ImmutableAvailability.DeepClone();
 
-            for (var i = movings.Count; (i -= 6) >= 0;)
+            for (var i = movings.Count; (i -= 8) >= 0;)
             {
                 if (movings[i] == movings[i + 1]) //Se la partenza è uguale alla destinazione (Non possibile)
                     return false; //Soluzione unfeasible

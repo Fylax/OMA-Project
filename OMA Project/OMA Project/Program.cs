@@ -41,6 +41,8 @@ namespace OMA_Project
                 var s = Stopwatch.StartNew();
                 r.Elapsed += Callback;
                 r.Enabled = true;
+                List<int> history = new List<int>();
+                var count = 1;
                 var currentSolution = Solver.InitialSolution();
                 var bestSolution = currentSolution.DeepClone();
                 var bestFitness = Solver.ObjectiveFunction(currentSolution);
@@ -61,7 +63,8 @@ namespace OMA_Project
                             availabilities = problem.Availability.DeepClone();
                             users = problem.Users;
                         }
-                        currentSolution = Solver.VNS(currentSolution, k);
+
+                        currentSolution = Solver.VNS(currentSolution, history, k, bestFitness);
                         var tempFitness = Solver.ObjectiveFunction(currentSolution);
                         if (tempFitness < bestFitness)
                         {
@@ -81,6 +84,7 @@ namespace OMA_Project
                             problem.Availability = availabilities.DeepClone();
                             problem.Users = users;
                         }
+
                     }
                 }
                 catch (NoUserLeft)
@@ -88,7 +92,7 @@ namespace OMA_Project
                     // Most likely it's an ST, try with a GRASP instead of VNS
                     var requiredUsers = new Dictionary<int, Dictionary<int, int>>();
                     if (r.Enabled)
-                        for (var i = 0; i < bestSolution.Count; i += 6)
+                        for (var i = 0; i < bestSolution.Count; i += 8)
                         {
                             Dictionary<int, int> required;
                             if (!requiredUsers.ContainsKey(bestSolution[i + 1]))
@@ -128,13 +132,14 @@ namespace OMA_Project
                 }
 
                 s.Stop();
+                //bool isOk = Solution.IsFeasible(bestSolution);
                 WriteSolution.Write(args[1], bestSolution, bestFitness, s.ElapsedMilliseconds, args[0]);
             }
         }
 
         private static void Callback(object sender, ElapsedEventArgs e)
         {
-            ((Timer) sender).Enabled = false;
+            ((Timer)sender).Enabled = false;
         }
     }
 }

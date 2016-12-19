@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using OMA_Project.Extensions;
 using static OMA_Project.Program;
 
 namespace OMA_Project
@@ -28,8 +30,8 @@ namespace OMA_Project
         /// </returns>
         public static List<int> InitialSolution()
         {
-            var solution = new List<int>(600);
-            var orderedTask = problem.Tasks.Select((t, c) => new {cell = c, task = t})
+            var solution = new List<int>(1000);
+            var orderedTask = problem.Tasks.Select((t, c) => new { cell = c, task = t })
                 .Where(t => t.task != 0).OrderBy(t => t.task).ToArray();
             var totalUsers = problem.TotalUsers();
             for (var i = orderedTask.Length; i-- > 0;)
@@ -80,6 +82,8 @@ namespace OMA_Project
                         movings.Add(i); //usertype
                         movings.Add(partitioned[i]); //usernumber
                         movings.Add(doneTasks); //perfomed tasks
+                        movings.Add(0); //probability to be removed
+                        movings.Add(0); //saturation field
                         partitioned[i] = 0;
                     }
                     else
@@ -99,6 +103,8 @@ namespace OMA_Project
                         movings.Add(i); //usertype
                         movings.Add(available); //usernumber
                         movings.Add(doneTasks); //perfomed tasks
+                        movings.Add(0); //probability to be removed
+                        movings.Add(0); //saturation field
                     }
                     if (totUsers[i] == 0)
                     {
@@ -219,7 +225,7 @@ namespace OMA_Project
             var tasks = problem.Tasks[destination];
             var lookup = new HashSet<int>();
             var droppable = new List<int>();
-            for (var i = movings.Count; (i -= 6) >= 0;)
+            for (var i = movings.Count; (i -= 8) >= 0;)
                 if (movings[i + 1] == destination)
                 {
                     lookup.Add(i);
@@ -235,7 +241,7 @@ namespace OMA_Project
                 if (available * tasksPerUser[minimum[2]].Tasks >= tasks)
                 {
                     // shift based ceiling function (way faster than Math.Ceiling)
-                    var used = 32768 - (int) (32768d - tasks / (double) tasksPerUser[minimum[2]].Tasks);
+                    var used = 32768 - (int)(32768d - tasks / (double)tasksPerUser[minimum[2]].Tasks);
                     availability[(minimum[0] * timeSlots + minimum[1]) * userTypes + minimum[2]] -=
                         used;
                     problem.Users -= used;
@@ -310,6 +316,8 @@ namespace OMA_Project
                     movings.Add(minimum[2]);
                     movings.Add(available);
                     movings.Add(available * tasksPerUser[minimum[2]].Tasks);
+                    movings.Add(0);
+                    movings.Add(0);
                 }
             }
         }
@@ -329,12 +337,12 @@ namespace OMA_Project
             // end optimization block;
             int sum;
             int j;
-            if (solution.Count / 6 % 2 != 0)
+            if (solution.Count / 8 % 2 != 0)
             {
                 sum = costs.costMatrix[
                           ((solution[0] * cells + solution[1]) * timeSlots + solution[2]) * userTypes +
                           solution[3]] * solution[4];
-                j = 6;
+                j = 8;
             }
             else
             {
@@ -342,7 +350,7 @@ namespace OMA_Project
                 j = 0;
             }
             var times = solution.Count / 2;
-            for (var i = solution.Count; (i -= 6) >= times; j += 6)
+            for (var i = solution.Count; (i -= 8) >= times; j += 8)
                 if (i == j)
                     sum = sum +
                           costs.costMatrix[
@@ -373,43 +381,150 @@ namespace OMA_Project
         /// </returns>
         public static List<int> VNS(List<int> movings, int percentage)
         {
-            var numTuples = movings.Count / 6;
+            var selectable = 0;
+            var numTuples = movings.Count / 8;
             var counter = numTuples * percentage / 100;
-            var toBeRecomputed = new HashSet<int>();
-            var toBeDropped = new bool[numTuples];
+            var destinationSelected = new List<int>();
+            var visited = new bool[numTuples];
+            List<int> droppedIndexes = new List<int>();
+            List<int> dropped = new List<int>();
+            List<int> currentSolution = new List<int>();
+
+            currentSolution = movings.DeepClone();
+            for (var j = 0; j < currentSolution.Count; j += 8)
+            {
+                if (currentSolution[j + 7] == 1) continue;
+                selectable++;
+            }
+            if (selectable < counter)
+                counter = selectable;
+
+            if (counter == 0)
+                return currentSolution;
+            foreach (var i in droppedIndexes)
+            {
+                droppedIndexes[i] = 0;
+            }
             for (var i = counter; i-- > 0;)
             {
                 int droppedIndex;
                 do
                 {
                     droppedIndex = generator.Next(numTuples);
-                } while (toBeDropped[droppedIndex]);
-                toBeDropped[droppedIndex] = true;
-                droppedIndex *= 6;
+                } while (visited[droppedIndex]);
+                visited[droppedIndex] = true;
+                droppedIndex *= 8;
+                droppedIndexes.Add(droppedIndex);
+
+                dropped.Add(currentSolution[droppedIndex]);
+                dropped.Add(currentSolution[droppedIndex + 1]);
+                dropped.Add(currentSolution[droppedIndex + 2]);
+                dropped.Add(currentSolution[droppedIndex + 3]);
+                dropped.Add(currentSolution[droppedIndex + 4]);
+                dropped.Add(currentSolution[droppedIndex + 5]);
+                dropped.Add(currentSolution[droppedIndex + 6]);
+                dropped.Add(currentSolution[droppedIndex + 7]);
+
                 problem.Availability[
-                    (movings[droppedIndex] * problem.TimeSlots + movings[droppedIndex + 2]) * problem.UserTypes +
-                    movings[droppedIndex + 3]] += movings[droppedIndex + 4];
-                problem.Users += movings[droppedIndex + 4];
-                toBeRecomputed.Add(movings[droppedIndex + 1]);
+                    (currentSolution[droppedIndex] * problem.TimeSlots + currentSolution[droppedIndex + 2]) * problem.UserTypes +
+                    currentSolution[droppedIndex + 3]] += currentSolution[droppedIndex + 4];
+                problem.Users += currentSolution[droppedIndex + 4];
+                destinationSelected.Add(currentSolution[droppedIndex + 1]);        // destination
             }
-            var tempList = new List<int>(movings.Capacity);
-            for (var i = 0; i < movings.Count; i += 6)
+
+            for (var k = 0; k < dropped.Count; k += 8)
             {
-                if (toBeDropped[i / 6]) continue;
-                tempList.Add(movings[i]);
-                tempList.Add(movings[i + 1]);
-                tempList.Add(movings[i + 2]);
-                tempList.Add(movings[i + 3]);
-                tempList.Add(movings[i + 4]);
-                tempList.Add(movings[i + 5]);
+                for (var j = 0; j < history.Count; j += 8)
+                {
+                    if (dropped[k] == history[j] && dropped[k + 1] == history[j + 1] &&
+                        dropped[k + 2] == history[j + 2] && dropped[k + 3] == history[j + 3] &&
+                        dropped[k + 4] == history[j + 4] && dropped[k + 5] == history[j + 5])
+                    {
+                        history[j + 6]++;
+                        history[j + 6] += dropped[k + 6];
+                    }
+                }
+                history.Add(dropped[k]);
+                history.Add(dropped[k + 1]);
+                history.Add(dropped[k + 2]);
+                history.Add(dropped[k + 3]);
+                history.Add(dropped[k + 4]);
+                history.Add(dropped[k + 5]);
+                history.Add(dropped[k + 6]);
+                history.Add(dropped[k + 7]);
+
             }
-            movings = tempList;
-            using (var enumerator = toBeRecomputed.GetEnumerator())
+            
+            var tempList = new List<int>(currentSolution.Capacity);
+            for (var i = 0; i < currentSolution.Count; i += 8)
+            {
+                if (visited[i / 8]) continue;
+                tempList.Add(currentSolution[i]);
+                tempList.Add(currentSolution[i + 1]);
+                tempList.Add(currentSolution[i + 2]);
+                tempList.Add(currentSolution[i + 3]);
+                tempList.Add(currentSolution[i + 4]);
+                tempList.Add(currentSolution[i + 5]);
+                tempList.Add(currentSolution[i + 6]);
+                tempList.Add(currentSolution[i + 7]);
+            }
+            currentSolution = tempList;
+            
+            using (var enumerator = destinationSelected.GetEnumerator())
             {
                 while (enumerator.MoveNext())
-                    SolveTasks(movings, enumerator.Current);
+                    SolveTasks(currentSolution, enumerator.Current);
             }
-            return movings;
+
+            var tempFitness = Solver.ObjectiveFunction(currentSolution);
+            if (tempFitness < bestFitness)
+            {
+                movings = currentSolution.DeepClone();
+
+                for (var k = 0; k < movings.Count; k += 8)
+                {
+                    for (var j = 0; j < history.Count; j += 8)
+                    {
+                        if (movings[k] == history[j] && movings[k + 1] == history[j + 1] &&
+                            movings[k + 2] == history[j + 2] && movings[k + 3] == history[j + 3] &&
+                            movings[k + 4] == history[j + 4] && movings[k + 5] == history[j + 5])
+                        {
+                            movings[k + 6] += history[j + 6];
+                            if (movings[k + 6] >= 10000)
+                                movings[k + 7] = 1;
+                        }
+                    }
+                }
+                /*
+                for (var i = 0; i < movings.Count; i += 8)
+                {
+                    movings[i + 6]++;
+                    if (movings[i + 6] >= 1000000)
+                        movings[i + 7] = 1;
+                }*/
+                return movings;
+            }
+
+            else
+            {
+                currentSolution = movings.DeepClone();
+                for (var i = 0; i < currentSolution.Count; i += 8)
+                {
+                    currentSolution[i + 6]--;
+                    if (currentSolution[i + 6] < 0)
+                        currentSolution[i + 6] = 0;
+                    if (currentSolution[i + 6] <= 10000)
+                        currentSolution[i + 7] = 0;
+                }
+                for (var i = 0; i < droppedIndexes.Count; i++)
+                {
+                    var offset = droppedIndexes[i];
+                    currentSolution[offset + 6]++;
+                    if (currentSolution[i + 6] >= 10000)
+                        currentSolution[i + 7] = 1;
+                }
+                return currentSolution;
+            }
         }
 
 
@@ -446,7 +561,7 @@ namespace OMA_Project
             var userTypes = problem.UserTypes;
             var timeSlots = problem.TimeSlots;
             // end optimization block
-            var movings = new List<int>(600);
+            var movings = new List<int>(1000);
             var totCell = cells;
             var visited = new bool[totCell];
             var allVisited = false;
@@ -485,6 +600,8 @@ namespace OMA_Project
                             movings.Add(userType); //usertype
                             movings.Add(required[userType]); //used users
                             movings.Add(tasks); //performed tasks
+                            movings.Add(0);
+                            movings.Add(0);
                             required[userType] = 0;
                         }
                         else
@@ -500,6 +617,8 @@ namespace OMA_Project
                             movings.Add(userType); //usertype
                             movings.Add(available); //used users
                             movings.Add(available * problem.TasksPerUser[userType].Tasks); //performed tasks
+                            movings.Add(0);
+                            movings.Add(0);
                         }
                     }
             }
