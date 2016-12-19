@@ -41,11 +41,10 @@ namespace OMA_Project
                 var s = Stopwatch.StartNew();
                 r.Elapsed += Callback;
                 r.Enabled = true;
-                List<int> history = new List<int>();
-                var count = 1;
                 var currentSolution = Solver.InitialSolution();
                 var bestSolution = currentSolution.DeepClone();
                 var bestFitness = Solver.ObjectiveFunction(currentSolution);
+                List<int> history = new List<int>(currentSolution.Capacity);
 
                 const int k_0 = 5;
                 const int k_max = 25;
@@ -132,7 +131,7 @@ namespace OMA_Project
                 }
 
                 s.Stop();
-                //bool isOk = Solution.IsFeasible(bestSolution);
+                bool isOk = Solution.IsFeasible(bestSolution);
                 WriteSolution.Write(args[1], bestSolution, bestFitness, s.ElapsedMilliseconds, args[0]);
             }
         }

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using OMA_Project.Extensions;
 using static OMA_Project.Program;
@@ -277,6 +276,8 @@ namespace OMA_Project
                         movings.Add(minimum[2]);
                         movings.Add(used);
                         movings.Add(tasks);
+                        movings.Add(0);
+                        movings.Add(0);
                     }
 
                     // sweeper!
@@ -301,7 +302,7 @@ namespace OMA_Project
                         }
 
                     foreach (var ptr in droppable.OrderByDescending(s => s))
-                        movings.RemoveRange(ptr, 6);
+                        movings.RemoveRange(ptr, 8);
                     tasks = 0;
                 }
                 else
@@ -375,22 +376,22 @@ namespace OMA_Project
         ///     <seealso cref="SolveTasks" />
         /// </summary>
         /// <param name="movings">Current solution from which tuples will be dropped.</param>
+        /// <param name="history">History of dropped tuples.</param>
         /// <param name="percentage">Percentage of tuples to be dropped (as integer). This means that 1 is 1%.</param>
+        /// <param name="bestFitness">Actual best found fitness.</param>
         /// <returns>
         ///     Solution processed by the VNS.
         /// </returns>
-        public static List<int> VNS(List<int> movings, int percentage)
+        public static List<int> VNS(List<int> movings, List<int> history, int percentage, int bestFitness)
         {
             var selectable = 0;
             var numTuples = movings.Count / 8;
             var counter = numTuples * percentage / 100;
-            var destinationSelected = new List<int>();
-            var visited = new bool[numTuples];
-            List<int> droppedIndexes = new List<int>();
-            List<int> dropped = new List<int>();
-            List<int> currentSolution = new List<int>();
+            var destinationSelected = new HashSet<int>();
+            var droppedIndices = new bool[numTuples];
+            List<int> droppedTuples = new List<int>(movings.Capacity);
 
-            currentSolution = movings.DeepClone();
+            var currentSolution = movings.DeepClone();
             for (var j = 0; j < currentSolution.Count; j += 8)
             {
                 if (currentSolution[j + 7] == 1) continue;
@@ -401,29 +402,15 @@ namespace OMA_Project
 
             if (counter == 0)
                 return currentSolution;
-            foreach (var i in droppedIndexes)
-            {
-                droppedIndexes[i] = 0;
-            }
             for (var i = counter; i-- > 0;)
             {
                 int droppedIndex;
                 do
                 {
                     droppedIndex = generator.Next(numTuples);
-                } while (visited[droppedIndex]);
-                visited[droppedIndex] = true;
+                } while (droppedIndices[droppedIndex]);
+                droppedIndices[droppedIndex] = true;
                 droppedIndex *= 8;
-                droppedIndexes.Add(droppedIndex);
-
-                dropped.Add(currentSolution[droppedIndex]);
-                dropped.Add(currentSolution[droppedIndex + 1]);
-                dropped.Add(currentSolution[droppedIndex + 2]);
-                dropped.Add(currentSolution[droppedIndex + 3]);
-                dropped.Add(currentSolution[droppedIndex + 4]);
-                dropped.Add(currentSolution[droppedIndex + 5]);
-                dropped.Add(currentSolution[droppedIndex + 6]);
-                dropped.Add(currentSolution[droppedIndex + 7]);
 
                 problem.Availability[
                     (currentSolution[droppedIndex] * problem.TimeSlots + currentSolution[droppedIndex + 2]) * problem.UserTypes +
@@ -431,59 +418,73 @@ namespace OMA_Project
                 problem.Users += currentSolution[droppedIndex + 4];
                 destinationSelected.Add(currentSolution[droppedIndex + 1]);        // destination
             }
-
-            for (var k = 0; k < dropped.Count; k += 8)
-            {
-                for (var j = 0; j < history.Count; j += 8)
-                {
-                    if (dropped[k] == history[j] && dropped[k + 1] == history[j + 1] &&
-                        dropped[k + 2] == history[j + 2] && dropped[k + 3] == history[j + 3] &&
-                        dropped[k + 4] == history[j + 4] && dropped[k + 5] == history[j + 5])
-                    {
-                        history[j + 6]++;
-                        history[j + 6] += dropped[k + 6];
-                    }
-                }
-                history.Add(dropped[k]);
-                history.Add(dropped[k + 1]);
-                history.Add(dropped[k + 2]);
-                history.Add(dropped[k + 3]);
-                history.Add(dropped[k + 4]);
-                history.Add(dropped[k + 5]);
-                history.Add(dropped[k + 6]);
-                history.Add(dropped[k + 7]);
-
-            }
             
             var tempList = new List<int>(currentSolution.Capacity);
             for (var i = 0; i < currentSolution.Count; i += 8)
             {
-                if (visited[i / 8]) continue;
-                tempList.Add(currentSolution[i]);
-                tempList.Add(currentSolution[i + 1]);
-                tempList.Add(currentSolution[i + 2]);
-                tempList.Add(currentSolution[i + 3]);
-                tempList.Add(currentSolution[i + 4]);
-                tempList.Add(currentSolution[i + 5]);
-                tempList.Add(currentSolution[i + 6]);
-                tempList.Add(currentSolution[i + 7]);
+                if (droppedIndices[i / 8])
+                {
+                    droppedTuples.Add(currentSolution[i]);
+                    droppedTuples.Add(currentSolution[i + 1]);
+                    droppedTuples.Add(currentSolution[i + 2]);
+                    droppedTuples.Add(currentSolution[i + 3]);
+                    droppedTuples.Add(currentSolution[i + 4]);
+                    droppedTuples.Add(currentSolution[i + 5]);
+                    droppedTuples.Add(currentSolution[i + 6]);
+                    droppedTuples.Add(currentSolution[i + 7]);
+                }
+                else
+                {
+                    tempList.Add(currentSolution[i]);
+                    tempList.Add(currentSolution[i + 1]);
+                    tempList.Add(currentSolution[i + 2]);
+                    tempList.Add(currentSolution[i + 3]);
+                    tempList.Add(currentSolution[i + 4]);
+                    tempList.Add(currentSolution[i + 5]);
+                    tempList.Add(currentSolution[i + 6]);
+                    tempList.Add(currentSolution[i + 7]);
+                }
             }
             currentSolution = tempList;
-            
+
+            for (var k = droppedTuples.Count; (k -= 8) >= 0;)
+            {
+                var saveInHistory = true;
+                for (var j = history.Count; saveInHistory && (j -= 8) >= 0;)
+                {
+                    if (droppedTuples[k] == history[j] && droppedTuples[k + 1] == history[j + 1] &&
+                        droppedTuples[k + 2] == history[j + 2] && droppedTuples[k + 3] == history[j + 3] &&
+                        droppedTuples[k + 4] == history[j + 4] && droppedTuples[k + 5] == history[j + 5])
+                    {
+                        history[j + 6] = history[j + 6] + droppedTuples[k + 6] + 1;
+                        saveInHistory = false;
+                    }
+                }
+                if (!saveInHistory) continue;
+                history.Add(droppedTuples[k]);
+                history.Add(droppedTuples[k + 1]);
+                history.Add(droppedTuples[k + 2]);
+                history.Add(droppedTuples[k + 3]);
+                history.Add(droppedTuples[k + 4]);
+                history.Add(droppedTuples[k + 5]);
+                history.Add(droppedTuples[k + 6]);
+                history.Add(droppedTuples[k + 7]);
+            }
+
             using (var enumerator = destinationSelected.GetEnumerator())
             {
                 while (enumerator.MoveNext())
                     SolveTasks(currentSolution, enumerator.Current);
             }
 
-            var tempFitness = Solver.ObjectiveFunction(currentSolution);
+            var tempFitness = ObjectiveFunction(currentSolution);
             if (tempFitness < bestFitness)
             {
                 movings = currentSolution.DeepClone();
 
-                for (var k = 0; k < movings.Count; k += 8)
+                for (var k = movings.Count; (k -= 8) >= 0;)
                 {
-                    for (var j = 0; j < history.Count; j += 8)
+                    for (var j = history.Count; (j -= 8) >= 0;)
                     {
                         if (movings[k] == history[j] && movings[k + 1] == history[j + 1] &&
                             movings[k + 2] == history[j + 2] && movings[k + 3] == history[j + 3] &&
@@ -492,39 +493,31 @@ namespace OMA_Project
                             movings[k + 6] += history[j + 6];
                             if (movings[k + 6] >= 10000)
                                 movings[k + 7] = 1;
+                            break;
                         }
                     }
                 }
-                /*
-                for (var i = 0; i < movings.Count; i += 8)
-                {
-                    movings[i + 6]++;
-                    if (movings[i + 6] >= 1000000)
-                        movings[i + 7] = 1;
-                }*/
                 return movings;
             }
 
-            else
+            currentSolution = movings.DeepClone();
+            for (var i = currentSolution.Count; (i -= 8) >= 0;)
             {
-                currentSolution = movings.DeepClone();
-                for (var i = 0; i < currentSolution.Count; i += 8)
-                {
-                    currentSolution[i + 6]--;
-                    if (currentSolution[i + 6] < 0)
-                        currentSolution[i + 6] = 0;
-                    if (currentSolution[i + 6] <= 10000)
-                        currentSolution[i + 7] = 0;
-                }
-                for (var i = 0; i < droppedIndexes.Count; i++)
-                {
-                    var offset = droppedIndexes[i];
-                    currentSolution[offset + 6]++;
-                    if (currentSolution[i + 6] >= 10000)
-                        currentSolution[i + 7] = 1;
-                }
-                return currentSolution;
+                currentSolution[i + 6]--;
+                if (currentSolution[i + 6] < 0)
+                    currentSolution[i + 6] = 0;
+                if (currentSolution[i + 6] <= 10000)
+                    currentSolution[i + 7] = 0;
             }
+            for (var i = droppedIndices.Length; i-- > 0;)
+            {
+                var offset = i * 8;
+                if (!droppedIndices[i]) continue;
+                currentSolution[offset + 6]++;
+                if (currentSolution[offset + 6] >= 10000)
+                    currentSolution[offset + 7] = 1;
+            }
+            return currentSolution;
         }
 
 
