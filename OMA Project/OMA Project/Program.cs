@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Timers;
 using OMA_Project.Extensions;
 
@@ -131,6 +132,21 @@ namespace OMA_Project
                 }
 
                 s.Stop();
+                int[] gnegne = new int[1000];
+                int j = 0;
+                for (int i = 6; i < history.Count; i += 8)
+                {
+                    gnegne[j] = history[i];
+                    j++;
+                }
+
+                int[] bestgne = new int[1000];
+                j = 0;
+                for (int i = 6; i < bestSolution.Count; i += 8)
+                {
+                    bestgne[j] = bestSolution[i];
+                    j++;
+                }
                 bool isOk = Solution.IsFeasible(bestSolution);
                 WriteSolution.Write(args[1], bestSolution, bestFitness, s.ElapsedMilliseconds, args[0]);
             }

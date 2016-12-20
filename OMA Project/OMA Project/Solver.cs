@@ -397,18 +397,23 @@ namespace OMA_Project
                 if (currentSolution[j + 7] == 1) continue;
                 selectable++;
             }
+            counter = selectable*percentage/100;
             if (selectable < counter)
                 counter = selectable;
 
-            if (counter == 0)
+            if (counter == 0)      
                 return currentSolution;
             for (var i = counter; i-- > 0;)
             {
                 int droppedIndex;
                 do
                 {
-                    droppedIndex = generator.Next(numTuples);
-                } while (droppedIndices[droppedIndex]);
+                    do
+                    {
+                        droppedIndex = generator.Next(numTuples);
+                    } while (droppedIndices[droppedIndex]);
+                } while (currentSolution[droppedIndex*8 + 7] == 1);
+       
                 droppedIndices[droppedIndex] = true;
                 droppedIndex *= 8;
 
@@ -456,7 +461,9 @@ namespace OMA_Project
                         droppedTuples[k + 2] == history[j + 2] && droppedTuples[k + 3] == history[j + 3] &&
                         droppedTuples[k + 4] == history[j + 4] && droppedTuples[k + 5] == history[j + 5])
                     {
-                        history[j + 6] = history[j + 6] + droppedTuples[k + 6] + 1;
+                     /*   if (history[j + 6] < droppedTuples[k + 6])
+                            history[j + 6] = droppedTuples[k + 6]++;
+                        else history[j + 6]++; */
                         saveInHistory = false;
                     }
                 }
@@ -482,6 +489,7 @@ namespace OMA_Project
             {
                 movings = currentSolution.DeepClone();
 
+
                 for (var k = movings.Count; (k -= 8) >= 0;)
                 {
                     for (var j = history.Count; (j -= 8) >= 0;)
@@ -490,32 +498,45 @@ namespace OMA_Project
                             movings[k + 2] == history[j + 2] && movings[k + 3] == history[j + 3] &&
                             movings[k + 4] == history[j + 4] && movings[k + 5] == history[j + 5])
                         {
-                            movings[k + 6] += history[j + 6];
-                            if (movings[k + 6] >= 10000)
+                            history[j + 6]++;
+                            movings[k + 6] = history[j + 6];
+                            if (movings[k + 6] >= 20)
                                 movings[k + 7] = 1;
                             break;
                         }
                     }
                 }
+
                 return movings;
             }
 
             currentSolution = movings.DeepClone();
-            for (var i = currentSolution.Count; (i -= 8) >= 0;)
+            /*for (var i = currentSolution.Count; (i -= 8) >= 0;)
             {
                 currentSolution[i + 6]--;
                 if (currentSolution[i + 6] < 0)
                     currentSolution[i + 6] = 0;
-                if (currentSolution[i + 6] <= 10000)
+                if (currentSolution[i + 6] <= 200)
                     currentSolution[i + 7] = 0;
-            }
+            }*/
+            
             for (var i = droppedIndices.Length; i-- > 0;)
             {
                 var offset = i * 8;
                 if (!droppedIndices[i]) continue;
-                currentSolution[offset + 6]++;
-                if (currentSolution[offset + 6] >= 10000)
-                    currentSolution[offset + 7] = 1;
+                for (var j = history.Count; (j -= 8) >= 0;)
+                {
+                    if (currentSolution[offset] == history[j] && currentSolution[offset + 1] == history[j + 1] &&
+                        currentSolution[offset + 2] == history[j + 2] && currentSolution[offset + 3] == history[j + 3] &&
+                        currentSolution[offset + 4] == history[j + 4] && currentSolution[offset + 5] == history[j + 5])
+                    {
+                        history[j + 6]++;
+                        currentSolution[offset + 6] = history[j + 6];
+                        if (currentSolution[offset + 6] >= 20)
+                            currentSolution[offset + 7] = 1;
+                        break;
+                    }
+                }
             }
             return currentSolution;
         }
