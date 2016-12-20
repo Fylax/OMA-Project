@@ -387,20 +387,30 @@ namespace OMA_Project
             var selectable = 0;
             var numTuples = movings.Count / 8;
             var counter = numTuples * percentage / 100;
-            var destinationSelected = new HashSet<int>();
+            /*
+             * Even though destinationSelected is easly computable through droppedTuples, 
+             * it is useful to avoid solving tasks (computing them and noticing are zero)
+             * for same destination multiple times (avoids duplication)
+             */
+            var destinationSelected = new HashSet<int>(); 
             var droppedIndices = new bool[numTuples];
             List<int> droppedTuples = new List<int>(movings.Capacity);
 
-            var currentSolution = movings.DeepClone();
-            for (var j = 0; j < currentSolution.Count; j += 8)
+            for (var j = 0; j < movings.Count; j += 8)
             {
-                if (currentSolution[j + 7] == 1) continue;
+                if (movings[j + 7] == 1) continue;
                 selectable++;
             }
-            counter = selectable*percentage/100;
+            //counter = selectable*percentage/100; //non sono d'accordo con questa cosa, così si rompe il VNS praticamente
             if (selectable < counter)
+            {
+                if (selectable == 0)
+                {
+                    return movings;
+                }
                 counter = selectable;
-
+            }
+            var currentSolution = movings.DeepClone();
             if (counter == 0)      
                 return currentSolution;
             for (var i = counter; i-- > 0;)
@@ -461,9 +471,6 @@ namespace OMA_Project
                         droppedTuples[k + 2] == history[j + 2] && droppedTuples[k + 3] == history[j + 3] &&
                         droppedTuples[k + 4] == history[j + 4] && droppedTuples[k + 5] == history[j + 5])
                     {
-                     /*   if (history[j + 6] < droppedTuples[k + 6])
-                            history[j + 6] = droppedTuples[k + 6]++;
-                        else history[j + 6]++; */
                         saveInHistory = false;
                     }
                 }
@@ -487,9 +494,7 @@ namespace OMA_Project
             var tempFitness = ObjectiveFunction(currentSolution);
             if (tempFitness < bestFitness)
             {
-                movings = currentSolution.DeepClone();
-
-
+                movings = currentSolution;
                 for (var k = movings.Count; (k -= 8) >= 0;)
                 {
                     for (var j = history.Count; (j -= 8) >= 0;)
@@ -510,7 +515,7 @@ namespace OMA_Project
                 return movings;
             }
 
-            currentSolution = movings.DeepClone();
+            currentSolution = movings;
             /*for (var i = currentSolution.Count; (i -= 8) >= 0;)
             {
                 currentSolution[i + 6]--;
