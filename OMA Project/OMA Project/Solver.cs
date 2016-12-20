@@ -384,6 +384,7 @@ namespace OMA_Project
         /// </returns>
         public static List<int> VNS(List<int> movings, List<int> history, int percentage, int bestFitness)
         {
+            const int SaturationBoundary = 20;
             var selectable = 0;
             var numTuples = movings.Count / 8;
             var counter = numTuples * percentage / 100;
@@ -418,11 +419,16 @@ namespace OMA_Project
                 int droppedIndex;
                 do
                 {
+                    bool drop;
                     do
                     {
                         droppedIndex = generator.Next(numTuples);
-                    } while (droppedIndices[droppedIndex]);
-                } while (currentSolution[droppedIndex*8 + 7] == 1);
+                        drop = currentSolution[droppedIndex * 8 + 7] != 1;
+                        if (drop)
+                            drop = currentSolution[droppedIndex * 8 + 6] < generator.Next(SaturationBoundary);
+                    } while (!drop);
+                } while (droppedIndices[droppedIndex]);
+                
        
                 droppedIndices[droppedIndex] = true;
                 droppedIndex *= 8;
@@ -505,7 +511,7 @@ namespace OMA_Project
                         {
                             history[j + 6]++;
                             movings[k + 6] = history[j + 6];
-                            if (movings[k + 6] >= 20)
+                            if (movings[k + 6] >= SaturationBoundary)
                                 movings[k + 7] = 1;
                             break;
                         }
@@ -537,7 +543,7 @@ namespace OMA_Project
                     {
                         history[j + 6]++;
                         currentSolution[offset + 6] = history[j + 6];
-                        if (currentSolution[offset + 6] >= 20)
+                        if (currentSolution[offset + 6] >= SaturationBoundary)
                             currentSolution[offset + 7] = 1;
                         break;
                     }
