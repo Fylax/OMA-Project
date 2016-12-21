@@ -264,6 +264,8 @@ namespace OMA_Project
                         {
                             var toBeRemoved = overbooking / problem.TasksPerUser[movings[ptr + 3]].Tasks;
                             movings[ptr + 4] -= toBeRemoved;
+                            if (movings[ptr + 4] == 0)
+                                droppable.Add(movings[ptr]);
                             problem.Availability[
                                 (movings[ptr] * problem.TimeSlots + movings[ptr + 2]) * problem.UserTypes +
                                 movings[ptr + 3]] += toBeRemoved;
@@ -304,7 +306,7 @@ namespace OMA_Project
                     }
 
                 foreach (var ptr in droppable.OrderByDescending(s => s))
-                    movings.RemoveRange(ptr, 8);
+                    movings.RemoveRange(ptr, 6);
             }
         }
 
@@ -387,15 +389,16 @@ namespace OMA_Project
                 toBeRecomputed.Add(movings[droppedIndex + 1]);
             }
             var tempList = new List<int>(movings.Capacity);
-            for (var i = 0; i < movings.Count; i += 6)
+            for (var i = 0; i < numTuples; i++)
             {
-                if (toBeDropped[i / 6]) continue;
-                tempList.Add(movings[i]);
-                tempList.Add(movings[i + 1]);
-                tempList.Add(movings[i + 2]);
-                tempList.Add(movings[i + 3]);
-                tempList.Add(movings[i + 4]);
-                tempList.Add(movings[i + 5]);
+                if (toBeDropped[i]) continue;
+                var offset = i * 6;
+                tempList.Add(movings[offset]);
+                tempList.Add(movings[offset + 1]);
+                tempList.Add(movings[offset + 2]);
+                tempList.Add(movings[offset + 3]);
+                tempList.Add(movings[offset + 4]);
+                tempList.Add(movings[offset + 5]);
             }
             movings = tempList;
             using (var enumerator = toBeRecomputed.GetEnumerator())
