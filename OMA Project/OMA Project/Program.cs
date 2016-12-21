@@ -64,13 +64,12 @@ namespace OMA_Project
                             users = problem.Users;
                         }
 
-                        currentSolution = Solver.VNS(currentSolution, history, k, bestFitness);
-                        var tempFitness = Solver.ObjectiveFunction(currentSolution);
-                        if (tempFitness < bestFitness)
+                        var explored = Solver.VNS(currentSolution, history, k, bestFitness);
+                        if (explored.Item2 < bestFitness)
                         {
                             accepted = true;
-                            bestSolution = currentSolution.DeepClone();
-                            bestFitness = Solver.ObjectiveFunction(bestSolution);
+                            bestSolution = explored.Item1.DeepClone();
+                            bestFitness = explored.Item2;
                             k = k_0;
                         }
                         else
@@ -80,7 +79,6 @@ namespace OMA_Project
                                 k = k_0;
                             else
                                 k++;
-                            currentSolution = bestSolution.DeepClone();
                             problem.Availability = availabilities.DeepClone();
                             problem.Users = users;
                         }
@@ -132,21 +130,6 @@ namespace OMA_Project
                 }
 
                 s.Stop();
-                int[] gnegne = new int[1000];
-                int j = 0;
-                for (int i = 6; i < history.Count; i += 8)
-                {
-                    gnegne[j] = history[i];
-                    j++;
-                }
-
-                int[] bestgne = new int[1000];
-                j = 0;
-                for (int i = 6; i < bestSolution.Count; i += 8)
-                {
-                    bestgne[j] = bestSolution[i];
-                    j++;
-                }
                 bool isOk = Solution.IsFeasible(bestSolution);
                 WriteSolution.Write(args[1], bestSolution, bestFitness, s.ElapsedMilliseconds, args[0]);
             }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using OMA_Project.Extensions;
 using static OMA_Project.Program;
@@ -382,9 +383,9 @@ namespace OMA_Project
         /// <returns>
         ///     Solution processed by the VNS.
         /// </returns>
-        public static List<int> VNS(List<int> movings, List<int> history, int percentage, int bestFitness)
+        public static Tuple<List<int>, int> VNS(List<int> movings, List<int> history, int percentage, int bestFitness)
         {
-            const int SaturationBoundary = 20;
+            const int SaturationBoundary = 100;
             var selectable = 0;
             var numTuples = movings.Count / 8;
             var counter = numTuples * percentage / 100;
@@ -397,7 +398,7 @@ namespace OMA_Project
             var droppedIndices = new bool[numTuples];
             List<int> droppedTuples = new List<int>(movings.Capacity);
 
-            for (var j = 0; j < movings.Count; j += 8)
+            for (var j = movings.Count; (j -= 8) >= 0;)
             {
                 if (movings[j + 7] == 1) continue;
                 selectable++;
@@ -407,13 +408,11 @@ namespace OMA_Project
             {
                 if (selectable == 0)
                 {
-                    return movings;
+                    return new Tuple<List<int>, int>(movings, ObjectiveFunction(movings));
                 }
                 counter = selectable;
             }
             var currentSolution = movings.DeepClone();
-            if (counter == 0)      
-                return currentSolution;
             for (var i = counter; i-- > 0;)
             {
                 int droppedIndex;
@@ -425,7 +424,7 @@ namespace OMA_Project
                         droppedIndex = generator.Next(numTuples);
                         drop = currentSolution[droppedIndex * 8 + 7] != 1;
                         if (drop)
-                            drop = currentSolution[droppedIndex * 8 + 6] < generator.Next(SaturationBoundary);
+                            drop = currentSolution[droppedIndex * 8 + 6] <= generator.Next(1, SaturationBoundary);
                     } while (!drop);
                 } while (droppedIndices[droppedIndex]);
                 
@@ -500,56 +499,31 @@ namespace OMA_Project
             var tempFitness = ObjectiveFunction(currentSolution);
             if (tempFitness < bestFitness)
             {
-                movings = currentSolution;
-                for (var k = movings.Count; (k -= 8) >= 0;)
-                {
-                    for (var j = history.Count; (j -= 8) >= 0;)
-                    {
-                        if (movings[k] == history[j] && movings[k + 1] == history[j + 1] &&
-                            movings[k + 2] == history[j + 2] && movings[k + 3] == history[j + 3] &&
-                            movings[k + 4] == history[j + 4] && movings[k + 5] == history[j + 5])
-                        {
-                            history[j + 6]++;
-                            movings[k + 6] = history[j + 6];
-                            if (movings[k + 6] >= SaturationBoundary)
-                                movings[k + 7] = 1;
-                            break;
-                        }
-                    }
-                }
-
-                return movings;
+                return new Tuple<List<int>, int>(currentSolution, tempFitness);
             }
-
-            currentSolution = movings;
-            /*for (var i = currentSolution.Count; (i -= 8) >= 0;)
-            {
-                currentSolution[i + 6]--;
-                if (currentSolution[i + 6] < 0)
-                    currentSolution[i + 6] = 0;
-                if (currentSolution[i + 6] <= 200)
-                    currentSolution[i + 7] = 0;
-            }*/
-            
+           
             for (var i = droppedIndices.Length; i-- > 0;)
             {
-                var offset = i * 8;
                 if (!droppedIndices[i]) continue;
+                var offset = i * 8;
                 for (var j = history.Count; (j -= 8) >= 0;)
                 {
-                    if (currentSolution[offset] == history[j] && currentSolution[offset + 1] == history[j + 1] &&
-                        currentSolution[offset + 2] == history[j + 2] && currentSolution[offset + 3] == history[j + 3] &&
-                        currentSolution[offset + 4] == history[j + 4] && currentSolution[offset + 5] == history[j + 5])
+                    if (movings[offset] == history[j] && movings[offset + 1] == history[j + 1] &&
+                        movings[offset + 2] == history[j + 2] && movings[offset + 3] == history[j + 3] &&
+                        movings[offset + 4] == history[j + 4] && movings[offset + 5] == history[j + 5])
                     {
                         history[j + 6]++;
-                        currentSolution[offset + 6] = history[j + 6];
-                        if (currentSolution[offset + 6] >= SaturationBoundary)
-                            currentSolution[offset + 7] = 1;
+                        movings[offset + 6] = history[j + 6];
+                        if (movings[offset + 6] >= SaturationBoundary)
+                        {
+                            movings[offset + 7] = 1;
+                            history[j + 7] = 1;
+                        }
                         break;
                     }
                 }
             }
-            return currentSolution;
+            return new Tuple<List<int>, int>(currentSolution, ObjectiveFunction(currentSolution));
         }
 
 
