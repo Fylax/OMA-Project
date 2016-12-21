@@ -238,89 +238,81 @@ namespace OMA_Project
                 var minimum = costs.GetMin(destination);
                 var available =
                     availability[(minimum[0] * timeSlots + minimum[1]) * userTypes + minimum[2]];
+                int used;
+                int performedTasks;
                 if (available * tasksPerUser[minimum[2]].Tasks >= tasks)
                 {
                     // shift based ceiling function (way faster than Math.Ceiling)
-                    var used = 32768 - (int)(32768d - tasks / (double)tasksPerUser[minimum[2]].Tasks);
-                    availability[(minimum[0] * timeSlots + minimum[1]) * userTypes + minimum[2]] -=
-                        used;
-                    problem.Users -= used;
-
-                    var currentPtr = -1;
-                    //compactizator
-                    foreach (var ptr in lookup)
-                        if (movings[ptr] == minimum[0] && movings[ptr + 2] == minimum[1] &&
-                            movings[ptr + 3] == minimum[2])
-                        {
-                            movings[ptr + 4] += used;
-                            movings[ptr + 5] += tasks;
-                            currentPtr = ptr;
-                            var overbooking = movings[ptr + 4] * problem.TasksPerUser[movings[ptr + 3]].Tasks -
-                                              movings[ptr + 5];
-                            if (overbooking >= problem.TasksPerUser[movings[ptr + 3]].Tasks)
-                            {
-                                var toBeRemoved = overbooking / problem.TasksPerUser[movings[ptr + 3]].Tasks;
-                                movings[ptr + 4] -= toBeRemoved;
-                                problem.Availability[
-                                    (movings[ptr] * problem.TimeSlots + movings[ptr + 2]) * problem.UserTypes +
-                                    movings[ptr + 3]] += toBeRemoved;
-                                problem.Users += toBeRemoved;
-                            }
-                            break;
-                        }
-                    if (currentPtr == -1)
-                    {
-                        currentPtr = movings.Count;
-                        movings.Add(minimum[0]);
-                        movings.Add(destination);
-                        movings.Add(minimum[1]);
-                        movings.Add(minimum[2]);
-                        movings.Add(used);
-                        movings.Add(tasks);
-                        movings.Add(0);
-                        movings.Add(0);
-                    }
-
-                    // sweeper!
-                    var overBooking = used * tasksPerUser[minimum[2]].Tasks - movings[currentPtr + 5];
-                    for (var i = userTypes; i-- > 0 && overBooking != 0;)
-                        foreach (var ptr in lookup)
-                        {
-                            if (ptr == currentPtr) continue;
-                            if (overBooking == 0) break;
-                            if (movings[ptr + 3] != i) continue;
-                            var lastPerformed = tasksPerUser[i].Tasks * (1 - movings[ptr + 4]) + movings[ptr + 5];
-                            if (lastPerformed > overBooking) continue;
-                            overBooking -= lastPerformed;
-                            movings[ptr + 4]--;
-                            movings[currentPtr + 5] += lastPerformed;
-                            availability[(movings[ptr] * timeSlots + movings[ptr + 2]) * userTypes + movings[ptr + 3]]++;
-                            problem.Users++;
-                            if (movings[ptr + 4] != 0)
-                                movings[ptr + 5] -= lastPerformed;
-                            else
-                                droppable.Add(ptr);
-                        }
-
-                    foreach (var ptr in droppable.OrderByDescending(s => s))
-                        movings.RemoveRange(ptr, 8);
+                    used = 32768 - (int)(32768d - tasks / (double)tasksPerUser[minimum[2]].Tasks);
+                    performedTasks = tasks;
                     tasks = 0;
                 }
                 else
                 {
-                    availability[(minimum[0] * timeSlots + minimum[1]) * userTypes + minimum[2]] -=
-                        available;
-                    problem.Users -= available;
-                    tasks = tasks - available * tasksPerUser[minimum[2]].Tasks;
+                    used = available;
+                    tasks -= used * tasksPerUser[minimum[2]].Tasks;
+                    performedTasks = used * tasksPerUser[minimum[2]].Tasks;
+                }
+                availability[(minimum[0] * timeSlots + minimum[1]) * userTypes + minimum[2]] -= used;
+                problem.Users -= used;
+                var currentPtr = -1;
+                //compactizator
+                foreach (var ptr in lookup)
+                    if (movings[ptr] == minimum[0] && movings[ptr + 2] == minimum[1] &&
+                        movings[ptr + 3] == minimum[2])
+                    {
+                        movings[ptr + 4] += used;
+                        movings[ptr + 5] += performedTasks;
+                        currentPtr = ptr;
+                        var overbooking = movings[ptr + 4] * problem.TasksPerUser[movings[ptr + 3]].Tasks -
+                                          movings[ptr + 5];
+                        if (overbooking >= problem.TasksPerUser[movings[ptr + 3]].Tasks)
+                        {
+                            var toBeRemoved = overbooking / problem.TasksPerUser[movings[ptr + 3]].Tasks;
+                            movings[ptr + 4] -= toBeRemoved;
+                            problem.Availability[
+                                (movings[ptr] * problem.TimeSlots + movings[ptr + 2]) * problem.UserTypes +
+                                movings[ptr + 3]] += toBeRemoved;
+                            problem.Users += toBeRemoved;
+                        }
+                        break;
+                    }
+                if (currentPtr == -1)
+                {
+                    currentPtr = movings.Count;
                     movings.Add(minimum[0]);
                     movings.Add(destination);
                     movings.Add(minimum[1]);
                     movings.Add(minimum[2]);
-                    movings.Add(available);
-                    movings.Add(available * tasksPerUser[minimum[2]].Tasks);
+                    movings.Add(used);
+                    movings.Add(performedTasks);
                     movings.Add(0);
                     movings.Add(0);
                 }
+
+                // sweeper!
+                var overBooking = used * tasksPerUser[minimum[2]].Tasks - movings[currentPtr + 5];
+                for (var i = userTypes; i-- > 0 && overBooking != 0;)
+                    foreach (var ptr in lookup)
+                    {
+                        if (ptr == currentPtr) continue;
+                        if (overBooking == 0) break;
+                        if (movings[ptr + 3] != i) continue;
+                        var lastPerformed = tasksPerUser[i].Tasks * (1 - movings[ptr + 4]) + movings[ptr + 5];
+                        if (lastPerformed > overBooking) continue;
+                        overBooking -= lastPerformed;
+                        movings[ptr + 4]--;
+                        movings[currentPtr + 5] += lastPerformed;
+                        availability[(movings[ptr] * timeSlots + movings[ptr + 2]) * userTypes + movings[ptr + 3]]++;
+                        problem.Users++;
+                        if (movings[ptr + 4] != 0)
+                            movings[ptr + 5] -= lastPerformed;
+                        else
+                            droppable.Add(ptr);
+                    }
+
+                foreach (var ptr in droppable.OrderByDescending(s => s))
+                    movings.RemoveRange(ptr, 8);
             }
         }
 
