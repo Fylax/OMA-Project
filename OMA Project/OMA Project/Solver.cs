@@ -29,7 +29,7 @@ namespace OMA_Project
         public static List<int> InitialSolution()
         {
             var solution = new List<int>(600);
-            var orderedTask = problem.Tasks.Select((t, c) => new {cell = c, task = t})
+            var orderedTask = problem.Tasks.Select((t, c) => new { cell = c, task = t })
                 .Where(t => t.task != 0).OrderBy(t => t.task).ToArray();
             var totalUsers = problem.TotalUsers();
             for (var i = orderedTask.Length; i-- > 0;)
@@ -219,11 +219,42 @@ namespace OMA_Project
             var tasks = problem.Tasks[destination];
             var lookup = new HashSet<int>();
             var droppable = new List<int>();
-            for (var i = movings.Count; (i -= 6) >= 0;)
-                if (movings[i + 1] == destination)
+            int j;
+            if (movings.Count / 6 % 2 != 0)
+            {
+                j = 6;
+                if (movings[1] == destination)
                 {
-                    lookup.Add(i);
-                    tasks -= movings[i + 5];
+                    tasks -= movings[5];
+                    lookup.Add(0);
+                }
+            }
+            else
+            {
+                j = 0;
+            }
+            var times = movings.Count / 2;
+            for (var i = movings.Count; (i -= 6) >= times; j += 6)
+                if (i == j)
+                {
+                    if (movings[i + 1] == destination)
+                    {
+                        tasks -= movings[i + 5];
+                        lookup.Add(i);
+                    }
+                }
+                else
+                {
+                    if (movings[i + 1] == destination)
+                    {
+                        tasks -= movings[i + 5];
+                        lookup.Add(i);
+                    }
+                    if (movings[j + 1] == destination)
+                    {
+                        tasks -= movings[j + 5];
+                        lookup.Add(j);
+                    }
                 }
             while (tasks != 0)
             {

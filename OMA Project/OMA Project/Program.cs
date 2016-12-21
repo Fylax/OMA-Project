@@ -122,12 +122,14 @@ namespace OMA_Project
                                 problem.Users = users;
                             }
                         }
-                        catch (NoUserLeft)
+                        catch (Exception)
                         {
+                            // ignored
                         }
                 }
 
                 s.Stop();
+                //bool isOk = Solution.IsFeasible(bestSolution);
                 WriteSolution.Write(args[1], bestSolution, bestFitness, s.ElapsedMilliseconds, args[0]);
             }
         }
