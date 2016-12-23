@@ -44,45 +44,35 @@ namespace OMA_Project
                 var currentSolution = Solver.InitialSolution();
                 var bestSolution = currentSolution.DeepClone();
                 var bestFitness = Solver.ObjectiveFunction(currentSolution);
-                // no need to deep-clone as it is only overwriten and/or deep-cloned
-                var currentBestSolution = bestSolution;
+                var currentBestSolution = currentSolution.DeepClone();
                 var currentBestFitness = bestFitness;
-
-                const int k_0 = 5;
-                const int k_max = 25;
 
                 var availabilities = problem.Availability.DeepClone();
                 var users = problem.Users;
                 try
                 {
+                    const int k_0 = 5;
+                    const int k_max = 25;
                     var k = k_0;
-                    var accepted = false;
                     while (r.Enabled)
                     {
-                        if (accepted)
-                        {
-                            availabilities = problem.Availability.DeepClone();
-                            users = problem.Users;
-                        }
                         currentSolution = Solver.VNS(currentSolution, k);
                         var tempFitness = Solver.ObjectiveFunction(currentSolution);
                         if (tempFitness < currentBestFitness)
                         {
-                            accepted = true;
                             currentBestFitness = tempFitness;
                             currentBestSolution = currentSolution.DeepClone();
+                            availabilities = problem.Availability.DeepClone();
+                            users = problem.Users;
                             if (currentBestFitness < bestFitness)
                             {
-                                // no need for deepclone as both bestSolution and
-                                // currentBest solution are always overwrited or deep-colned
-                                bestSolution = currentBestSolution;
+                                bestSolution = currentBestSolution.DeepClone();
                                 bestFitness = currentBestFitness;
                             }
                             k = k_0;
                         }
                         else
                         {
-                            accepted = false;
                             if (k == k_max)
                             {
                                 k = k_0;
@@ -152,7 +142,7 @@ namespace OMA_Project
                 }
 
                 s.Stop();
-                //bool isOk = Solution.IsFeasible(bestSolution);
+                bool isOk = Solution.IsFeasible(bestSolution);
                 WriteSolution.Write(args[1], bestSolution, bestFitness, s.ElapsedMilliseconds, args[0]);
             }
         }
