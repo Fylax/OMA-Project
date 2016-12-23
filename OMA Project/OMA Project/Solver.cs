@@ -440,7 +440,6 @@ namespace OMA_Project
             return movings;
         }
 
-
         /// <summary>
         ///     Computes the Greedy Randomized Adaptive Search Procedure Methaheuristic.
         ///     <para />
