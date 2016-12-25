@@ -9,19 +9,20 @@ using OMA_Project.Extensions;
 namespace OMA_Project
 {
     /// <summary>
-    /// Application's entry point.
+    ///     Application's entry point.
     /// </summary>
     internal static class Program
     {
         /// <summary>
-        /// Random Number Generator used among various method.<para/>
-        /// As it internally avoids extracting same value multiple consecutive
-        /// times, it has been designed to be a static shared field.
+        ///     Random Number Generator used among various method.
+        ///     <para />
+        ///     As it internally avoids extracting same value multiple consecutive
+        ///     times, it has been designed to be a static shared field.
         /// </summary>
         public static readonly Random generator = new Random();
 
         /// <summary>
-        /// Data concerning the problem.
+        ///     Data concerning the problem.
         /// </summary>
         public static Problem problem;
 
@@ -41,10 +42,10 @@ namespace OMA_Project
                 var s = Stopwatch.StartNew();
                 r.Elapsed += Callback;
                 r.Enabled = true;
-                var currentSolution = Solver.InitialSolution();
-                var bestSolution = currentSolution.DeepClone();
-                var bestFitness = Solver.ObjectiveFunction(currentSolution);
-                var currentBestSolution = currentSolution.DeepClone();
+                var currentSolution = Solver.InitialSolution(false);
+                var bestSolution = currentSolution;
+                var bestFitness = Solver.ObjectiveFunction(bestSolution);
+                var currentBestSolution = currentSolution;
                 var currentBestFitness = bestFitness;
 
                 var availabilities = problem.Availability.DeepClone();
@@ -54,6 +55,7 @@ namespace OMA_Project
                     const int k_0 = 5;
                     const int k_max = 25;
                     var k = k_0;
+                    var maxCounter = 0;
                     while (r.Enabled)
                     {
                         currentSolution = Solver.VNS(currentSolution, k);
@@ -61,35 +63,39 @@ namespace OMA_Project
                         if (tempFitness < currentBestFitness)
                         {
                             currentBestFitness = tempFitness;
-                            currentBestSolution = currentSolution.DeepClone();
+                            currentBestSolution = currentSolution;
                             availabilities = problem.Availability.DeepClone();
                             users = problem.Users;
                             if (currentBestFitness < bestFitness)
                             {
-                                bestSolution = currentBestSolution.DeepClone();
+                                bestSolution = currentBestSolution;
                                 bestFitness = currentBestFitness;
                             }
                             k = k_0;
                         }
                         else
                         {
-                            if (k == k_max)
+                            if (k == k_max && maxCounter < 10)
                             {
                                 k = k_0;
+                                maxCounter = 0;
                                 // restore problem to inital status
                                 problem.Availability = problem.ImmutableAvailability.DeepClone();
                                 problem.Users = problem.ImmutableUsers;
-                                availabilities = problem.ImmutableAvailability.DeepClone();
-                                users = problem.ImmutableUsers;
                                 // solve from start
-                                currentSolution = Solver.InitialSolution();
+                                currentSolution = Solver.InitialSolution(true);
                                 currentBestFitness = Solver.ObjectiveFunction(currentSolution);
-                                currentBestSolution = currentSolution.DeepClone();
+                                currentBestSolution = currentSolution;
+                                availabilities = problem.Availability.DeepClone();
+                                users = problem.Users;
                             }
                             else
                             {
-                                k++;
-                                currentSolution = currentBestSolution.DeepClone();
+                                if (k == k_max)
+                                    maxCounter++;
+                                else
+                                    k++;
+                                currentSolution = currentBestSolution;
                                 problem.Availability = availabilities.DeepClone();
                                 problem.Users = users;
                             }
@@ -127,7 +133,7 @@ namespace OMA_Project
                             var tempFitness = Solver.ObjectiveFunction(currentSolution);
                             if (tempFitness < bestFitness)
                             {
-                                bestSolution = currentSolution.DeepClone();
+                                bestSolution = currentSolution;
                                 bestFitness = tempFitness;
                             }
                             else
@@ -142,7 +148,7 @@ namespace OMA_Project
                 }
 
                 s.Stop();
-                bool isOk = Solution.IsFeasible(bestSolution);
+                //bool isOk = Solution.IsFeasible(bestSolution);
                 WriteSolution.Write(args[1], bestSolution, bestFitness, s.ElapsedMilliseconds, args[0]);
             }
         }
