@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Timers;
 using OMA_Project.Extensions;
+using static OMA_Project.Solver;
 
 namespace OMA_Project
 {
@@ -19,7 +21,7 @@ namespace OMA_Project
         ///     As it internally avoids extracting same value multiple consecutive
         ///     times, it has been designed to be a static shared field.
         /// </summary>
-        public static readonly Random generator = new Random();
+        public static readonly Random generator = new Random(8204);
 
         /// <summary>
         ///     Data concerning the problem.
@@ -33,18 +35,24 @@ namespace OMA_Project
 
             problem = Problem.ReadFromFile(args[0]);
             GC.Collect();
+
+            // optimization block
             RuntimeHelpers.PrepareConstrainedRegions();
             GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
             GC.TryStartNoGCRegion(174000000);
 
+            var staticMaxCounter = problem.Cells >> 1;
+            var originalAvailability = problem.ImmutableAvailability;
+            var originalUsers = problem.ImmutableUsers;
+            // end optimization block
             using (var r = new Timer(5000))
             {
                 var s = Stopwatch.StartNew();
                 r.Elapsed += Callback;
                 r.Enabled = true;
-                var currentSolution = Solver.InitialSolution(false);
+                var currentSolution = InitialSolution();
                 var bestSolution = currentSolution;
-                var bestFitness = Solver.ObjectiveFunction(bestSolution);
+                var bestFitness = ObjectiveFunction(bestSolution);
                 var currentBestSolution = currentSolution;
                 var currentBestFitness = bestFitness;
 
@@ -55,11 +63,11 @@ namespace OMA_Project
                     const int k_0 = 5;
                     const int k_max = 25;
                     var k = k_0;
-                    var maxCounter = 0;
+                    var maxCounter = staticMaxCounter;
                     while (r.Enabled)
                     {
-                        currentSolution = Solver.VNS(currentSolution, k);
-                        var tempFitness = Solver.ObjectiveFunction(currentSolution);
+                        currentSolution = VNS(currentSolution, k);
+                        var tempFitness = ObjectiveFunction(currentSolution);
                         if (tempFitness < currentBestFitness)
                         {
                             currentBestFitness = tempFitness;
@@ -75,16 +83,16 @@ namespace OMA_Project
                         }
                         else
                         {
-                            if (k == k_max && maxCounter < 10)
+                            if (k == k_max && maxCounter > 0)
                             {
                                 k = k_0;
-                                maxCounter = 0;
+                                maxCounter = staticMaxCounter;
                                 // restore problem to inital status
-                                problem.Availability = problem.ImmutableAvailability.DeepClone();
-                                problem.Users = problem.ImmutableUsers;
+                                problem.Availability = originalAvailability.DeepClone();
+                                problem.Users = originalUsers;
                                 // solve from start
-                                currentSolution = Solver.InitialSolution(true);
-                                currentBestFitness = Solver.ObjectiveFunction(currentSolution);
+                                currentSolution = InitialSolution();
+                                currentBestFitness = ObjectiveFunction(currentSolution);
                                 currentBestSolution = currentSolution;
                                 availabilities = problem.Availability.DeepClone();
                                 users = problem.Users;
@@ -92,7 +100,7 @@ namespace OMA_Project
                             else
                             {
                                 if (k == k_max)
-                                    maxCounter++;
+                                    maxCounter--;
                                 else
                                     k++;
                                 currentSolution = currentBestSolution;
@@ -127,10 +135,10 @@ namespace OMA_Project
                     while (r.Enabled)
                         try
                         {
-                            problem.Availability = problem.ImmutableAvailability.DeepClone();
-                            problem.Users = problem.ImmutableUsers;
-                            currentSolution = Solver.GRASP(requiredUsers);
-                            var tempFitness = Solver.ObjectiveFunction(currentSolution);
+                            problem.Availability = originalAvailability.DeepClone();
+                            problem.Users = originalUsers;
+                            currentSolution = GRASP(requiredUsers);
+                            var tempFitness = ObjectiveFunction(currentSolution);
                             if (tempFitness < bestFitness)
                             {
                                 bestSolution = currentSolution;

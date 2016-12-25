@@ -14,16 +14,6 @@ namespace OMA_Project
         ///     Computes the initial solution, generated
         ///     through the Change Making Problem.
         /// </summary>
-        /// <param name="randomized">
-        ///     Whether the cells should be taske from
-        ///     the one from maximum number of tasks to the one with minimum
-        ///     number of task (<c>false</c>) or in a random way (<c>true</c>)
-        ///     <para />
-        ///     <c>false</c> is useful for the very first initial solution or when approaching
-        ///     instances with a strict gap between users available and tasks to be done,
-        ///     <c>true</c> is useful when approaching a newer initial solution to explore neighborhood
-        ///     very far from the initial one.
-        /// </param>
         /// <returns>
         ///     Initial solution in a flattened array,
         ///     each tuple is 6-element long, with:
@@ -36,13 +26,10 @@ namespace OMA_Project
         ///         <item>Performed tasks</item>
         ///     </list>
         /// </returns>
-        public static List<int> InitialSolution(bool randomized)
+        public static List<int> InitialSolution()
         {
             var solution = new List<int>(600);
-            var orderedTask = randomized
-                ? problem.Tasks.Select((t, c) => new {cell = c, task = t})
-                    .Where(t => t.task != 0).OrderBy(t => generator.Next()).ToArray()
-                : problem.Tasks.Select((t, c) => new {cell = c, task = t})
+            var orderedTask = problem.Tasks.Select((t, c) => new {cell = c, task = t})
                     .Where(t => t.task != 0).OrderBy(t => t.task).ToArray();
             var totalUsers = problem.TotalUsers();
             for (var i = orderedTask.Length; i-- > 0;)
