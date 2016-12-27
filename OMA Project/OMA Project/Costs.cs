@@ -91,8 +91,8 @@ namespace OMA_Project
         public void AddMatrix(int[][] matrix, int timeSlot, int userType, int cells, int timeSlots, int userTypes)
         {
             for (var start = 0; start < cells; ++start)
-            for (var dest = 0; dest < cells; ++dest)
-                costMatrix[((start * cells + dest) * timeSlots + timeSlot) * userTypes + userType] = matrix[start][dest];
+                for (var dest = 0; dest < cells; ++dest)
+                    costMatrix[((start * cells + dest) * timeSlots + timeSlot) * userTypes + userType] = matrix[start][dest];
         }
 
         /// <summary>
@@ -124,6 +124,8 @@ namespace OMA_Project
             var cells = problem.Cells;
             var timeSlots = problem.TimeSlots;
             var userTypes = problem.UserTypes;
+            var baseStart = cells * timeSlots * userTypes;
+            var baseDest = timeSlots * userTypes * destination + userType;
             // end optimization block
             var minValue = int.MaxValue;
             var minTime = 0;
@@ -132,12 +134,9 @@ namespace OMA_Project
                 for (var start = cells; start-- > 0;)
                 {
                     if (start != destination)
-                        for (var timeSlot = timeSlots; timeSlot-- > 0;)
+                    for (var timeSlot = timeSlots; timeSlot-- > 0;)
                         {
-                            var cost =
-                                costMatrix[
-                                    ((start * cells + destination) * timeSlots + timeSlot) * userTypes +
-                                    userType];
+                            var cost = costMatrix[start * baseStart + baseDest + timeSlot * userTypes];
                             if (minValue <= cost ||
                                 availability[(start * timeSlots + timeSlot) * userTypes + userType] == 0)
                                 continue;
@@ -148,10 +147,7 @@ namespace OMA_Project
                     if (--start == destination) continue;
                     for (var timeSlot = timeSlots; timeSlot-- > 0;)
                     {
-                        var cost =
-                            costMatrix[
-                                ((start * cells + destination) * timeSlots + timeSlot) * userTypes +
-                                userType];
+                        var cost = costMatrix[start * baseStart + baseDest + timeSlot * userTypes];
                         if (minValue <= cost ||
                             availability[(start * timeSlots + timeSlot) * userTypes + userType] == 0)
                             continue;
@@ -167,9 +163,7 @@ namespace OMA_Project
                     for (var timeSlot = timeSlots; timeSlot-- > 0;)
                     {
                         var cost =
-                            costMatrix[
-                                ((start * cells + destination) * timeSlots + timeSlot) * userTypes +
-                                userType];
+                            costMatrix[start * baseStart + baseDest + timeSlot * userTypes];
                         if (minValue <= cost ||
                             availability[(start * timeSlots + timeSlot) * userTypes + userType] == 0)
                             continue;
@@ -178,7 +172,7 @@ namespace OMA_Project
                         minTime = timeSlot;
                     }
                 }
-            return new[] {minStart, minTime};
+            return new[] { minStart, minTime };
         }
 
         /// <summary>
@@ -211,6 +205,8 @@ namespace OMA_Project
             var userTypes = problem.UserTypes;
             var timeSlots = problem.TimeSlots;
             var availability = problem.Availability;
+            var baseStart = cells * timeSlots * userTypes;
+            var baseDest = timeSlots * userTypes * destination;
             // end optmization block
             var minValue = double.MaxValue;
             var minUser = 0;
@@ -219,20 +215,21 @@ namespace OMA_Project
             Parallel.For(0, cells, start =>
             {
                 if (start == destination) return;
+                var avStart = start * timeSlots * userTypes;
                 for (var timeSlot = timeSlots; timeSlot-- > 0;)
+                {
+                    var avIndex = avStart + timeSlot * userTypes;
                     if (unrollableUser)
                     {
-                        var weightedCost0 = costMatrix[((start * cells + destination) *
-                                                        timeSlots + timeSlot) * userTypes] *
-                                            taskPerUser[userTypes - 1].Tasks / (double) taskPerUser[0].Tasks;
-                        var weightedCost1 = costMatrix[((start * cells + destination) *
-                                                        timeSlots + timeSlot) * userTypes + 1] *
-                                            taskPerUser[userTypes - 1].Tasks / (double) taskPerUser[1].Tasks;
-                        double weightedCost2 = costMatrix[((start * cells + destination) *
-                                                           timeSlots + timeSlot) * userTypes + 2];
+                        var baseIndex = start * baseStart + baseDest + timeSlot * userTypes;
+                        var weightedCost0 = costMatrix[baseIndex] * taskPerUser[userTypes - 1].Tasks /
+                                            (double) taskPerUser[0].Tasks;
+                        var weightedCost1 = costMatrix[baseIndex + 1] * taskPerUser[userTypes - 1].Tasks /
+                                            (double) taskPerUser[1].Tasks;
+                        double weightedCost2 = costMatrix[baseIndex + 2];
                         lock (sync)
                         {
-                            if (availability[(start * timeSlots + timeSlot) * userTypes] != 0)
+                            if (availability[avIndex] != 0)
                                 if (weightedCost0 < minValue)
                                 {
                                     minValue = weightedCost0;
@@ -241,7 +238,7 @@ namespace OMA_Project
                                     minUser = 0;
                                     if (weightedCost0 < weightedCost1 && weightedCost0 < weightedCost2) continue;
                                 }
-                            if (availability[(start * timeSlots + timeSlot) * userTypes + 1] != 0)
+                            if (availability[avIndex + 1] != 0)
                                 if (weightedCost1 < minValue)
                                 {
                                     minValue = weightedCost1;
@@ -250,7 +247,7 @@ namespace OMA_Project
                                     minUser = 1;
                                     if (weightedCost1 < weightedCost0 && weightedCost1 < weightedCost2) continue;
                                 }
-                            if (availability[(start * timeSlots + timeSlot) * userTypes + 2] == 0) continue;
+                            if (availability[avIndex + 2] == 0) continue;
                             if (weightedCost2 >= minValue) continue;
                             minValue = weightedCost2;
                             minStart = start;
@@ -261,12 +258,12 @@ namespace OMA_Project
                     else
                     {
                         for (var userType = userTypes; userType-- > 0;)
-                            if (availability[(start * timeSlots + timeSlot) * userTypes + userType] != 0)
+                            if (availability[avIndex + userType] != 0)
                             {
-                                var weightedCost = costMatrix[((start * cells + destination) *
-                                                               problem.TimeSlots + timeSlot) * userTypes + userType] *
-                                                   taskPerUser[userTypes - 1].Tasks /
-                                                   (double) taskPerUser[userType].Tasks;
+                                var weightedCost =
+                                    costMatrix[start * baseStart + baseDest + timeSlot * userTypes + userType] *
+                                    taskPerUser[userTypes - 1].Tasks /
+                                    (double) taskPerUser[userType].Tasks;
                                 lock (sync)
                                 {
                                     if (minValue <= weightedCost) continue;
@@ -277,8 +274,9 @@ namespace OMA_Project
                                 }
                             }
                     }
+                }
             });
-            return new[] {minStart, minTime, minUser};
+            return new[] { minStart, minTime, minUser };
         }
     }
 }

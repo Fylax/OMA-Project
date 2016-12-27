@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime;
 using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
 using System.Timers;
 using OMA_Project.Extensions;
 using static OMA_Project.Solver;
@@ -21,7 +20,7 @@ namespace OMA_Project
         ///     As it internally avoids extracting same value multiple consecutive
         ///     times, it has been designed to be a static shared field.
         /// </summary>
-        public static readonly Random generator = new Random(8204);
+        public static readonly Random generator = new Random();
 
         /// <summary>
         ///     Data concerning the problem.
@@ -41,7 +40,6 @@ namespace OMA_Project
             GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
             GC.TryStartNoGCRegion(174000000);
 
-            var staticMaxCounter = problem.Cells >> 1;
             var originalAvailability = problem.ImmutableAvailability;
             var originalUsers = problem.ImmutableUsers;
             // end optimization block
@@ -63,7 +61,6 @@ namespace OMA_Project
                     const int k_0 = 5;
                     const int k_max = 25;
                     var k = k_0;
-                    var maxCounter = staticMaxCounter;
                     while (r.Enabled)
                     {
                         currentSolution = VNS(currentSolution, k);
@@ -83,10 +80,9 @@ namespace OMA_Project
                         }
                         else
                         {
-                            if (k == k_max && maxCounter > 0)
+                            if (k == k_max)
                             {
                                 k = k_0;
-                                maxCounter = staticMaxCounter;
                                 // restore problem to inital status
                                 problem.Availability = originalAvailability.DeepClone();
                                 problem.Users = originalUsers;
@@ -99,10 +95,7 @@ namespace OMA_Project
                             }
                             else
                             {
-                                if (k == k_max)
-                                    maxCounter--;
-                                else
-                                    k++;
+                                k++;
                                 currentSolution = currentBestSolution;
                                 problem.Availability = availabilities.DeepClone();
                                 problem.Users = users;
@@ -156,8 +149,8 @@ namespace OMA_Project
                 }
 
                 s.Stop();
-                //bool isOk = Solution.IsFeasible(bestSolution);
-                WriteSolution.Write(args[1], bestSolution, bestFitness, s.ElapsedMilliseconds, args[0]);
+                bool isOk = Solution.IsFeasible(bestSolution);
+                //WriteSolution.Write(args[1], bestSolution, bestFitness, s.ElapsedMilliseconds, args[0]);
             }
         }
 
