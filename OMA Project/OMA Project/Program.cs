@@ -149,8 +149,8 @@ namespace OMA_Project
                 }
 
                 s.Stop();
-                bool isOk = Solution.IsFeasible(bestSolution);
-                //WriteSolution.Write(args[1], bestSolution, bestFitness, s.ElapsedMilliseconds, args[0]);
+                //bool isOk = Solution.IsFeasible(bestSolution);
+                WriteSolution.Write(args[1], bestSolution, bestFitness, s.ElapsedMilliseconds, args[0]);
             }
         }
 

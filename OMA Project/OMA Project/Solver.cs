@@ -29,8 +29,8 @@ namespace OMA_Project
         public static List<int> InitialSolution()
         {
             var solution = new List<int>(600);
-            var orderedTask = problem.Tasks.Select((t, c) => new { cell = c, task = t })
-                    .Where(t => t.task != 0).OrderBy(t => t.task).ToArray();
+            var orderedTask = problem.Tasks.Select((t, c) => new {cell = c, task = t})
+                .Where(t => t.task != 0).OrderBy(t => t.task).ToArray();
             var totalUsers = problem.TotalUsers();
             for (var i = orderedTask.Length; i-- > 0;)
                 SolvePreciseTasks(solution, totalUsers, orderedTask[i].cell, orderedTask[i].task);
@@ -71,8 +71,7 @@ namespace OMA_Project
                             ? tasks
                             : partitioned[i] * tasksPerUser[i].Tasks;
                         tasks -= partitioned[i] * tasksPerUser[i].Tasks;
-                        availability[avIndex] -=
-                            partitioned[i];
+                        availability[avIndex] -= partitioned[i];
                         problem.Users -= partitioned[i];
                         totUsers[i] -= partitioned[i];
                         movings.Add(minimum[0]); //start
@@ -231,7 +230,7 @@ namespace OMA_Project
             {
                 j = 0;
             }
-            var times = movings.Count >> 1;
+            var times = movings.Count / 2;
             for (var i = movings.Count; (i -= 6) >= times; j += 6)
                 if (i == j)
                 {
@@ -266,7 +265,7 @@ namespace OMA_Project
                 if (available * tasksPerUser[minimum[2]].Tasks >= tasks)
                 {
                     // shift based ceiling function (way faster than Math.Ceiling)
-                    used = 32768 - (int)(32768d - tasks / (double)tasksPerUser[minimum[2]].Tasks);
+                    used = 32768 - (int) (32768d - tasks / (double) tasksPerUser[minimum[2]].Tasks);
                     performedTasks = tasks;
                     tasks = 0;
                 }
@@ -299,7 +298,8 @@ namespace OMA_Project
                                 movings[ptr + 4] -= toBeRemoved;
                                 if (movings[ptr + 4] == 0)
                                     droppable.Add(movings[ptr]);
-                                availability[movings[ptr] + baseAv + movings[ptr + 2]* userTypes + movings[ptr+3]] += toBeRemoved;
+                                availability[movings[ptr] * baseAv + movings[ptr + 2] * userTypes + movings[ptr + 3]] +=
+                                    toBeRemoved;
                                 problem.Users += toBeRemoved;
                             }
                             break;
@@ -333,7 +333,7 @@ namespace OMA_Project
                             overBooking -= lastPerformed;
                             movings[ptr + 4]--;
                             movings[currentPtr + 5] += lastPerformed;
-                            availability[movings[ptr] + baseAv + movings[ptr + 2] * userTypes + movings[ptr + 3]]++;
+                            availability[movings[ptr] * baseAv + movings[ptr + 2] * userTypes + movings[ptr + 3]]++;
                             problem.Users++;
                             if (movings[ptr + 4] != 0)
                                 movings[ptr + 5] -= lastPerformed;
@@ -364,7 +364,10 @@ namespace OMA_Project
             int j;
             if (solution.Count / 6 % 2 != 0)
             {
-                sum = costs.costMatrix[solution[0] * baseStart + solution[1] * baseDest + solution[2] * userTypes + solution[3]] * solution[4];
+                sum =
+                    costs.costMatrix[
+                        solution[0] * baseStart + solution[1] * baseDest + solution[2] * userTypes + solution[3]] *
+                    solution[4];
                 j = 6;
             }
             else
@@ -376,11 +379,17 @@ namespace OMA_Project
             for (var i = solution.Count; (i -= 6) >= times; j += 6)
                 if (i == j)
                     sum = sum +
-                          costs.costMatrix[solution[i] * baseStart + solution[i + 1] * baseDest + solution[i + 2] * userTypes + solution[i + 3]] * solution[i + 4];
+                          costs.costMatrix[
+                              solution[i] * baseStart + solution[i + 1] * baseDest + solution[i + 2] * userTypes +
+                              solution[i + 3]] * solution[i + 4];
                 else
                     sum = sum +
-                          costs.costMatrix[solution[i] * baseStart + solution[i + 1] * baseDest + solution[i + 2] * userTypes + solution[i + 3]] * solution[i + 4] +
-                          costs.costMatrix[solution[j] * baseStart + solution[j + 1] * baseDest + solution[j + 2] * userTypes + solution[j + 3]] * solution[j + 4];
+                          costs.costMatrix[
+                              solution[i] * baseStart + solution[i + 1] * baseDest + solution[i + 2] * userTypes +
+                              solution[i + 3]] * solution[i + 4] +
+                          costs.costMatrix[
+                              solution[j] * baseStart + solution[j + 1] * baseDest + solution[j + 2] * userTypes +
+                              solution[j + 3]] * solution[j + 4];
             return sum;
         }
 
@@ -400,7 +409,7 @@ namespace OMA_Project
         {
             // Optimization block (not really required, just more readability ed enforced inling)
             var userTypes = problem.UserTypes;
-            var baseAv = problem.TimeSlots * userTypes; 
+            var baseAv = problem.TimeSlots * userTypes;
             // end optimization block
             var numTuples = movings.Count / 6;
             var counter = numTuples * percentage / 100;
@@ -415,7 +424,9 @@ namespace OMA_Project
                 } while (toBeDropped[droppedIndex]);
                 toBeDropped[droppedIndex] = true;
                 droppedIndex *= 6;
-                problem.Availability[movings[droppedIndex] *baseAv + movings[droppedIndex + 2] * userTypes + movings[droppedIndex+ 3]] += movings[droppedIndex + 4];
+                problem.Availability[
+                        movings[droppedIndex] * baseAv + movings[droppedIndex + 2] * userTypes + movings[droppedIndex + 3]]
+                    += movings[droppedIndex + 4];
                 problem.Users += movings[droppedIndex + 4];
                 toBeRecomputed.Add(movings[droppedIndex + 1]);
             }

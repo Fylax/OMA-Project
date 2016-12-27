@@ -91,8 +91,8 @@ namespace OMA_Project
         public void AddMatrix(int[][] matrix, int timeSlot, int userType, int cells, int timeSlots, int userTypes)
         {
             for (var start = 0; start < cells; ++start)
-                for (var dest = 0; dest < cells; ++dest)
-                    costMatrix[((start * cells + dest) * timeSlots + timeSlot) * userTypes + userType] = matrix[start][dest];
+            for (var dest = 0; dest < cells; ++dest)
+                costMatrix[((start * cells + dest) * timeSlots + timeSlot) * userTypes + userType] = matrix[start][dest];
         }
 
         /// <summary>
@@ -134,7 +134,7 @@ namespace OMA_Project
                 for (var start = cells; start-- > 0;)
                 {
                     if (start != destination)
-                    for (var timeSlot = timeSlots; timeSlot-- > 0;)
+                        for (var timeSlot = timeSlots; timeSlot-- > 0;)
                         {
                             var cost = costMatrix[start * baseStart + baseDest + timeSlot * userTypes];
                             if (minValue <= cost ||
@@ -172,7 +172,7 @@ namespace OMA_Project
                         minTime = timeSlot;
                     }
                 }
-            return new[] { minStart, minTime };
+            return new[] {minStart, minTime};
         }
 
         /// <summary>
@@ -276,7 +276,7 @@ namespace OMA_Project
                     }
                 }
             });
-            return new[] { minStart, minTime, minUser };
+            return new[] {minStart, minTime, minUser};
         }
     }
 }
