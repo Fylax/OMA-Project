@@ -30,7 +30,7 @@ namespace OMA_Project
         /// <param name="fitness">Fitness for this solution.</param>
         /// <param name="elapsedTime">Elapsed time.</param>
         /// <param name="instance">Instance name.</param>
-        public static void Write(string filename, List<int> solution, int fitness, long elapsedTime,
+        public static void Write(string filename, List<int> solution, int fitness, double elapsedTime,
             string instance)
         {
             var name = Path.GetFileName(instance)?.Split('.')[0];
@@ -53,7 +53,7 @@ namespace OMA_Project
                             break;
                     }
                 writer.WriteLine('"' + name + "\";" +
-                                 (elapsedTime / 1000d).ToString(CultureInfo.InvariantCulture) + ';' +
+                                 elapsedTime.ToString(CultureInfo.InvariantCulture) + ';' +
                                  fitness + ';' + u1 + ';' + u2 + ';' + u3);
             }
         }

@@ -374,7 +374,7 @@ namespace OMA_Project
             // Optimization block (not really required, just more readability ed enforced inling)
             var costs = problem.Matrix;
             var userTypes = problem.UserTypes;
-            var baseDest = problem.TimeSlots * userTypes;
+            var baseDest = problem.AvailabilityBaseIndex;
             var baseStart = baseDest * problem.Cells;
             // end optimization block;
             int sum;
