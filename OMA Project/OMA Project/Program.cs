@@ -59,7 +59,7 @@ namespace OMA_Project
                 try
                 {
                     const int k_0 = 5;
-                    const int k_max = 25;
+                    const int k_max = 30;
                     var k = k_0;
                     while (r.Enabled)
                     {

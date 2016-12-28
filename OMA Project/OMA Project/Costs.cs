@@ -63,6 +63,11 @@ namespace OMA_Project
         private readonly bool unrollableUser;
 
         /// <summary>
+        /// Precomputed offset for start cell.
+        /// </summary>
+        private readonly int baseStart;
+
+        /// <summary>
         ///     Initializes a new <see cref="Costs" /> matrix (performing checks on
         ///     unrollability conditions).
         ///     <para />
@@ -77,6 +82,7 @@ namespace OMA_Project
             costMatrix = new int[numCells * numCells * timeSlots * userTypes];
             unrollableUser = userTypes == 3;
             unrollableCells = numCells % 2 == 0;
+            baseStart = numCells * timeSlots * userTypes;
         }
 
         /// <summary>
@@ -124,8 +130,8 @@ namespace OMA_Project
             var cells = problem.Cells;
             var timeSlots = problem.TimeSlots;
             var userTypes = problem.UserTypes;
-            var baseStart = cells * timeSlots * userTypes;
             var baseDest = timeSlots * userTypes * destination + userType;
+            var baseAv = problem.AvailabilityBaseIndex;
             // end optimization block
             var minValue = int.MaxValue;
             var minTime = 0;
@@ -138,7 +144,7 @@ namespace OMA_Project
                         {
                             var cost = costMatrix[start * baseStart + baseDest + timeSlot * userTypes];
                             if (minValue <= cost ||
-                                availability[(start * timeSlots + timeSlot) * userTypes + userType] == 0)
+                                availability[start * baseAv + timeSlot * userTypes + userType] == 0)
                                 continue;
                             minValue = cost;
                             minStart = start;
@@ -149,7 +155,7 @@ namespace OMA_Project
                     {
                         var cost = costMatrix[start * baseStart + baseDest + timeSlot * userTypes];
                         if (minValue <= cost ||
-                            availability[(start * timeSlots + timeSlot) * userTypes + userType] == 0)
+                            availability[start * baseAv + timeSlot * userTypes + userType] == 0)
                             continue;
                         minValue = cost;
                         minStart = start;
@@ -162,10 +168,9 @@ namespace OMA_Project
                     if (start == destination) continue;
                     for (var timeSlot = timeSlots; timeSlot-- > 0;)
                     {
-                        var cost =
-                            costMatrix[start * baseStart + baseDest + timeSlot * userTypes];
+                        var cost = costMatrix[start * baseStart + baseDest + timeSlot * userTypes];
                         if (minValue <= cost ||
-                            availability[(start * timeSlots + timeSlot) * userTypes + userType] == 0)
+                            availability[start * baseAv + timeSlots * userTypes + userType] == 0)
                             continue;
                         minValue = cost;
                         minStart = start;
@@ -205,7 +210,6 @@ namespace OMA_Project
             var userTypes = problem.UserTypes;
             var timeSlots = problem.TimeSlots;
             var availability = problem.Availability;
-            var baseStart = cells * timeSlots * userTypes;
             var baseDest = timeSlots * userTypes * destination;
             // end optmization block
             var minValue = double.MaxValue;
@@ -221,10 +225,10 @@ namespace OMA_Project
                     var avIndex = avStart + timeSlot * userTypes;
                     if (unrollableUser)
                     {
-                        var baseIndex = start * baseStart + baseDest + timeSlot * userTypes;
-                        var weightedCost0 = costMatrix[baseIndex] * taskPerUser[userTypes - 1].Tasks /
+                        var baseIndex = start * baseStart + baseDest + timeSlot * 3;
+                        var weightedCost0 = costMatrix[baseIndex] * taskPerUser[2].Tasks /
                                             (double) taskPerUser[0].Tasks;
-                        var weightedCost1 = costMatrix[baseIndex + 1] * taskPerUser[userTypes - 1].Tasks /
+                        var weightedCost1 = costMatrix[baseIndex + 1] * taskPerUser[2].Tasks /
                                             (double) taskPerUser[1].Tasks;
                         double weightedCost2 = costMatrix[baseIndex + 2];
                         lock (sync)

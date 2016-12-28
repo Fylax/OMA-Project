@@ -211,7 +211,7 @@ namespace OMA_Project
             var tasksPerUser = problem.TasksPerUser;
             var availability = problem.Availability;
             var userTypes = problem.UserTypes;
-            var baseAv = problem.TimeSlots * userTypes;
+            var baseAv = problem.AvailabilityBaseIndex;
             // end optimization block;
             var tasks = problem.Tasks[destination];
             var lookup = new HashSet<int>();

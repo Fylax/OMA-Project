@@ -25,7 +25,16 @@ namespace OMA_Project
             Cells = cells;
             TimeSlots = timeSlots;
             UserTypes = users;
+            AvailabilityBaseIndex = timeSlots * users;
         }
+
+        /// <summary>
+        /// Gets the base index of the availability.
+        /// </summary>
+        /// <value>
+        /// The base index of the availability.
+        /// </value>
+        public int AvailabilityBaseIndex { get; }
 
         /// <summary>
         ///     An immutable copy of original availability informations.
