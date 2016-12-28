@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using OMA_Project.Extensions;
 using static OMA_Project.Program;
 
 namespace OMA_Project
@@ -29,11 +30,25 @@ namespace OMA_Project
         public static List<int> InitialSolution()
         {
             var solution = new List<int>(600);
-            var orderedTask = problem.Tasks.Select((t, c) => new {cell = c, task = t})
-                .Where(t => t.task != 0).OrderBy(t => t.task).ToArray();
-            var totalUsers = problem.TotalUsers();
-            for (var i = orderedTask.Length; i-- > 0;)
-                SolvePreciseTasks(solution, totalUsers, orderedTask[i].cell, orderedTask[i].task);
+            try
+            {
+                var orderedTask = problem.Tasks.Select((t, c) => new {cell = c, task = t})
+                    .Where(t => t.task != 0).OrderBy(t => t.task).ToArray();
+                var totalUsers = problem.TotalUsers();
+                for (var i = orderedTask.Length; i-- > 0;)
+                    SolvePreciseTasks(solution, totalUsers, orderedTask[i].cell, orderedTask[i].task);
+            }
+            catch (NoUserLeft)
+            {
+                problem.Availability = problem.ImmutableAvailability.DeepClone();
+                solution.Clear();
+                problem.Users = problem.ImmutableUsers;
+                var orderedTask = problem.Tasks.Select((t, c) => new { cell = c, task = t })
+                    .Where(t => t.task != 0).OrderByDescending(t => t.task).ToArray();
+                var totalUsers = problem.TotalUsers();
+                for (var i = orderedTask.Length; i-- > 0;)
+                    SolvePreciseTasks(solution, totalUsers, orderedTask[i].cell, orderedTask[i].task);
+            }
             return solution;
         }
 
@@ -62,6 +77,8 @@ namespace OMA_Project
             for (var i = partitioned.Length; i-- > 0;)
                 while (partitioned[i] != 0)
                 {
+                    if (problem.Users == 0)
+                        throw new NoUserLeft();
                     var minimum = costs.GetMin(destination, i);
                     var avIndex = minimum[0] * baseAv + minimum[1] * userTypes + i;
                     var available = availability[avIndex];
