@@ -29,7 +29,7 @@ namespace OMA_Project
         /// </returns>
         public static List<int> InitialSolution()
         {
-            var solution = new List<int>(600);
+            var solution = new List<int>(10000);
             try
             {
                 var orderedTask = problem.Tasks.Select((t, c) => new {cell = c, task = t})
@@ -234,7 +234,7 @@ namespace OMA_Project
             var lookup = new HashSet<int>();
             var droppable = new List<int>();
             int j;
-            if (movings.Count / 6 % 2 != 0)
+            if ((movings.Count * 10923 >> 16) % 2 != 0)
             {
                 j = 6;
                 if (movings[1] == destination)
@@ -247,7 +247,7 @@ namespace OMA_Project
             {
                 j = 0;
             }
-            var times = movings.Count / 2;
+            var times = movings.Count >> 1;
             for (var i = movings.Count; (i -= 6) >= times; j += 6)
                 if (i == j)
                 {
@@ -379,7 +379,7 @@ namespace OMA_Project
             // end optimization block;
             int sum;
             int j;
-            if (solution.Count / 6 % 2 != 0)
+            if ((solution.Count * 10923 >> 16) % 2 != 0)
             {
                 sum =
                     costs.costMatrix[
@@ -392,7 +392,7 @@ namespace OMA_Project
                 sum = 0;
                 j = 0;
             }
-            var times = solution.Count / 2;
+            var times = solution.Count >> 1;
             for (var i = solution.Count; (i -= 6) >= times; j += 6)
                 if (i == j)
                     sum = sum +
@@ -428,8 +428,8 @@ namespace OMA_Project
             var userTypes = problem.UserTypes;
             var baseAv = problem.TimeSlots * userTypes;
             // end optimization block
-            var numTuples = movings.Count / 6;
-            var counter = numTuples * percentage / 100;
+            var numTuples = movings.Count * 10923 >> 16;
+            var counter = numTuples * percentage * 1311 >> 17;
             var toBeRecomputed = new HashSet<int>();
             var toBeDropped = new bool[numTuples];
             for (var i = counter; i-- > 0;)
@@ -447,25 +447,24 @@ namespace OMA_Project
                 problem.Users += movings[droppedIndex + 4];
                 toBeRecomputed.Add(movings[droppedIndex + 1]);
             }
-            var tempList = new List<int>(movings.Capacity);
+            var currentSolution = new List<int>(movings.Capacity);
             for (var i = 0; i < numTuples; i++)
             {
                 if (toBeDropped[i]) continue;
                 var offset = i * 6;
-                tempList.Add(movings[offset]);
-                tempList.Add(movings[offset + 1]);
-                tempList.Add(movings[offset + 2]);
-                tempList.Add(movings[offset + 3]);
-                tempList.Add(movings[offset + 4]);
-                tempList.Add(movings[offset + 5]);
+                currentSolution.Add(movings[offset]);
+                currentSolution.Add(movings[offset + 1]);
+                currentSolution.Add(movings[offset + 2]);
+                currentSolution.Add(movings[offset + 3]);
+                currentSolution.Add(movings[offset + 4]);
+                currentSolution.Add(movings[offset + 5]);
             }
-            movings = tempList;
             using (var enumerator = toBeRecomputed.GetEnumerator())
             {
                 while (enumerator.MoveNext())
-                    SolveTasks(movings, enumerator.Current);
+                    SolveTasks(currentSolution, enumerator.Current);
             }
-            return movings;
+            return currentSolution;
         }
 
         /// <summary>
