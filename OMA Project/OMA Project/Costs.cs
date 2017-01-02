@@ -137,36 +137,52 @@ namespace OMA_Project
             var minTime = 0;
             var minStart = 0;
             if (unrollableCells)
-                for (var s = cells >> 1; s-- > 0;)
+                for (int s = cells >> 1; s-- > 0;)
                 {
                     var start = s << 1;
                     var nextStart = start + 1;
                     var costOffset = start * baseStart + baseDest;
                     var nextCostOffset = nextStart * baseStart + baseDest;
-                    var avOffset = start * baseAv;
-                    var nextAvOffset = nextStart * baseAv;
-                    for (var timeSlot = timeSlots; timeSlot-- > 0;)
-                    {
-                        if (start != destination)
+                    var avOffset = start * baseAv + userType;
+                    var nextAvOffset = nextStart * baseAv + userType;
+                    if (start != destination && nextStart != destination)
+                        for (var timeSlot = timeSlots; timeSlot-- > 0;)
                         {
-                            var cost = costMatrix[costOffset + timeSlot * userTypes];
-                            if (minValue > cost && availability[avOffset + timeSlot * userTypes + userType] != 0)
+                            var cost0 = costMatrix[costOffset + timeSlot * userTypes];
+                            var cost1 = costMatrix[nextCostOffset + timeSlot * userTypes];
+                            if (cost0 > minValue && cost1 > minValue) continue;
+                            if (cost0 < minValue && availability[avOffset + timeSlot * userTypes] != 0)
                             {
-                                minValue = cost;
+                                minValue = cost0;
                                 minStart = start;
                                 minTime = timeSlot;
+                                if (cost0 < cost1) continue;
+
                             }
-                        }
-                        if (nextStart != destination)
-                        {
-                            var cost = costMatrix[nextCostOffset + timeSlot * userTypes];
-                            if (minValue > cost && availability[nextAvOffset + timeSlot * userTypes + userType] != 0)
+                            if (cost1 < minValue && availability[nextAvOffset + timeSlot * userTypes] != 0)
                             {
-                                minValue = cost;
+                                minValue = cost1;
                                 minStart = nextStart;
                                 minTime = timeSlot;
                             }
+
                         }
+                    if (start == destination)
+                    {
+                        start = nextStart;
+                        costOffset = nextCostOffset;
+                        avOffset = nextAvOffset;
+                    }
+                    for (var timeSlot = timeSlots; timeSlot-- > 0;)
+                    {
+                        var cost = costMatrix[costOffset + timeSlot * userTypes];
+                        if (cost < minValue && availability[avOffset + timeSlot * userTypes] != 0)
+                        {
+                            minValue = cost;
+                            minStart = start;
+                            minTime = timeSlot;
+                        }
+
                     }
                 }
             else
@@ -176,12 +192,12 @@ namespace OMA_Project
                     for (var timeSlot = timeSlots; timeSlot-- > 0;)
                     {
                         var cost = costMatrix[start * baseStart + baseDest + timeSlot * userTypes + userType];
-                        if (minValue <= cost ||
-                            availability[start * baseAv + timeSlot * userTypes + userType] == 0)
-                            continue;
-                        minValue = cost;
-                        minStart = start;
-                        minTime = timeSlot;
+                        if (minValue > cost && availability[start * baseAv + timeSlot * userTypes + userType] == 0)
+                        {
+                            minValue = cost;
+                            minStart = start;
+                            minTime = timeSlot;
+                        }
                     }
                 }
             return new[] { minStart, minTime };
@@ -254,68 +270,63 @@ namespace OMA_Project
                             var weightedCost12 = costMatrix[nextCostIndex + 2];
                             lock (sync)
                             {
-                                if (availability[avIndex] != 0)
-                                    if (weightedCost00 < minValue)
-                                    {
-                                        minValue = weightedCost00;
-                                        minStart = start;
-                                        minTime = timeSlot;
-                                        minUser = 0;
-                                        if (weightedCost00 < weightedCost01 && weightedCost00 < weightedCost02 &&
-                                            weightedCost00 < weightedCost10 && weightedCost00 < weightedCost11 &&
-                                            weightedCost00 < weightedCost12) continue;
-                                    }
-                                if (availability[avIndex + 1] != 0)
-                                    if (weightedCost01 < minValue)
-                                    {
-                                        minValue = weightedCost01;
-                                        minStart = start;
-                                        minTime = timeSlot;
-                                        minUser = 1;
-                                        if (weightedCost01 < weightedCost00 && weightedCost01 < weightedCost02 &&
-                                            weightedCost01 < weightedCost10 && weightedCost01 < weightedCost11 &&
-                                            weightedCost01 < weightedCost12)
-                                            continue;
-                                    }
-                                if (availability[avIndex + 2] != 0)
+                                if (weightedCost00 > minValue && weightedCost01 > minValue &&
+                                    weightedCost02 > minValue && weightedCost10 > minValue &&
+                                    weightedCost11 > minValue && weightedCost12 > minValue) continue;
+                                if (weightedCost00 < minValue && availability[avIndex] != 0)
                                 {
-                                    if (weightedCost02 < minValue)
-                                    {
-                                        minValue = weightedCost02;
-                                        minStart = start;
-                                        minTime = timeSlot;
-                                        minUser = 2;
-                                        if (weightedCost02 < weightedCost00 && weightedCost02 < weightedCost01 &&
-                                            weightedCost02 < weightedCost10 && weightedCost02 < weightedCost11 &&
-                                            weightedCost02 < weightedCost12)
-                                            continue;
-                                    }
+                                    minValue = weightedCost00;
+                                    minStart = start;
+                                    minTime = timeSlot;
+                                    minUser = 0;
+                                    if (weightedCost00 < weightedCost01 && weightedCost00 < weightedCost02 &&
+                                        weightedCost00 < weightedCost10 && weightedCost00 < weightedCost11 &&
+                                        weightedCost00 < weightedCost12) continue;
                                 }
-                                if (availability[nextAvIndex] != 0)
-                                    if (weightedCost10 < minValue)
-                                    {
-                                        minValue = weightedCost10;
-                                        minStart = nextStart;
-                                        minTime = timeSlot;
-                                        minUser = 0;
-                                        if (weightedCost10 < weightedCost00 && weightedCost10 < weightedCost01 &&
-                                            weightedCost10 < weightedCost02 && weightedCost10 < weightedCost11 &&
-                                            weightedCost10 < weightedCost12) continue;
-                                    }
-                                if (availability[nextAvIndex + 1] != 0)
-                                    if (weightedCost11 < minValue)
-                                    {
-                                        minValue = weightedCost11;
-                                        minStart = nextStart;
-                                        minTime = timeSlot;
-                                        minUser = 1;
-                                        if (weightedCost11 < weightedCost00 && weightedCost11 < weightedCost01 &&
-                                            weightedCost11 < weightedCost02 && weightedCost11 < weightedCost10 &&
-                                            weightedCost11 < weightedCost12)
-                                            continue;
-                                    }
-                                if (availability[nextAvIndex + 2] == 0) continue;
-                                if (weightedCost12 >= minValue) continue;
+                                if (weightedCost01 < minValue && availability[avIndex + 1] != 0)
+                                {
+                                    minValue = weightedCost01;
+                                    minStart = start;
+                                    minTime = timeSlot;
+                                    minUser = 1;
+                                    if (weightedCost01 < weightedCost00 && weightedCost01 < weightedCost02 &&
+                                        weightedCost01 < weightedCost10 && weightedCost01 < weightedCost11 &&
+                                        weightedCost01 < weightedCost12)
+                                        continue;
+                                }
+                                if (weightedCost02 < minValue && availability[avIndex + 2] != 0)
+                                {
+                                    minValue = weightedCost02;
+                                    minStart = start;
+                                    minTime = timeSlot;
+                                    minUser = 2;
+                                    if (weightedCost02 < weightedCost00 && weightedCost02 < weightedCost01 &&
+                                        weightedCost02 < weightedCost10 && weightedCost02 < weightedCost11 &&
+                                        weightedCost02 < weightedCost12)
+                                        continue;
+                                }
+                                if (weightedCost10 < minValue && availability[nextAvIndex] != 0)
+                                {
+                                    minValue = weightedCost10;
+                                    minStart = nextStart;
+                                    minTime = timeSlot;
+                                    minUser = 0;
+                                    if (weightedCost10 < weightedCost00 && weightedCost10 < weightedCost01 &&
+                                        weightedCost10 < weightedCost02 && weightedCost10 < weightedCost11 &&
+                                        weightedCost10 < weightedCost12) continue;
+                                }
+                                if (weightedCost11 < minValue && availability[nextAvIndex + 1] != 0)
+                                {
+                                    minValue = weightedCost11;
+                                    minStart = nextStart;
+                                    minTime = timeSlot;
+                                    minUser = 1;
+                                    if (weightedCost11 < weightedCost00 && weightedCost11 < weightedCost01 &&
+                                        weightedCost11 < weightedCost02 && weightedCost11 < weightedCost10 &&
+                                        weightedCost11 < weightedCost12)
+                                        continue;
+                                }
+                                if (weightedCost12 >= minValue || availability[nextAvIndex + 2] == 0) continue;
                                 minValue = weightedCost12;
                                 minStart = nextStart;
                                 minTime = timeSlot;
@@ -339,27 +350,24 @@ namespace OMA_Project
                         double weightedCost2 = costMatrix[costIndex + 2];
                         lock (sync)
                         {
-                            if (availability[avIndex] != 0)
-                                if (weightedCost0 < minValue)
-                                {
-                                    minValue = weightedCost0;
-                                    minStart = start;
-                                    minTime = timeSlot;
-                                    minUser = 0;
-                                    if (weightedCost0 < weightedCost1 && weightedCost0 < weightedCost2) continue;
-                                }
-                            if (availability[avIndex + 1] != 0)
-                                if (weightedCost1 < minValue)
-                                {
-                                    minValue = weightedCost1;
-                                    minStart = start;
-                                    minTime = timeSlot;
-                                    minUser = 1;
-                                    if (weightedCost1 < weightedCost0 && weightedCost1 < weightedCost2)
-                                        continue;
-                                }
-                            if (availability[avIndex + 2] == 0) continue;
-                            if (!(weightedCost2 < minValue)) continue;
+                            if (weightedCost0 < minValue && availability[avIndex] != 0)
+                            {
+                                minValue = weightedCost0;
+                                minStart = start;
+                                minTime = timeSlot;
+                                minUser = 0;
+                                if (weightedCost0 < weightedCost1 && weightedCost0 < weightedCost2) continue;
+                            }
+                            if (weightedCost1 < minValue && availability[avIndex + 1] != 0)
+                            {
+                                minValue = weightedCost1;
+                                minStart = start;
+                                minTime = timeSlot;
+                                minUser = 1;
+                                if (weightedCost1 < weightedCost0 && weightedCost1 < weightedCost2)
+                                    continue;
+                            }
+                            if (weightedCost2 >= minValue || availability[avIndex + 2] == 0) continue;
                             minValue = weightedCost2;
                             minStart = start;
                             minTime = timeSlot;

@@ -9,19 +9,6 @@ namespace OMA_Project
     /// </summary>
     public static class WriteSolution
     {
-        public static void WriteMov(string filename, List<int> moving)
-        {
-            using (var writer = new StreamWriter(filename, true))
-            {
-                for (var i = 0; i < moving.Count; i += 6)
-                {
-                    var toWrite = moving[i].ToString() + ';' + moving[i + 1] + ';' +
-                                  moving[i + 2] + ';' + moving[i + 3] + ';' + moving[i + 4];
-                    writer.WriteLine(toWrite);
-                }
-            }
-        }
-
         /// <summary>
         ///     Writes a summary of the solution on file.
         /// </summary>
